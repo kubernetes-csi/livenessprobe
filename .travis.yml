@@ -1,6 +1,5 @@
 language: go
 
-# Needed for e2e tests
 sudo: true
 go: 1.9.x
 go_import_path: github.com/kubernetes-csi/livenessprobe
@@ -12,3 +11,9 @@ script:
 - go fmt $(go list ./... | grep -v vendor) | wc -l | grep 0
 - go vet $(go list ./... | grep -v vendor)
 - go test $(go list ./... | grep -v vendor)
+after_success:
+  - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
+      sudo make livenessprobe-container;
+      docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" quay.io;
+      docker push quay.io/k8scsi/livenessprobe:canary;
+    fi
