@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+REGISTRY_NAME = quay.io/k8scsi
+IMAGE_VERSION = canary 
+
 .PHONY: all liveness clean test
 
 ifdef V
@@ -29,6 +32,9 @@ livenessprobe:
 macos-livenessprobe:
 	mkdir -p bin
 	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe.osx ./cmd 
+
+livenessprobe-container: livenessprobe
+	docker build -t $(REGISTRY_NAME)/livenessprobe:$(IMAGE_VERSION) -f ./Dockerfile .
 
 clean:
 	rm -rf bin

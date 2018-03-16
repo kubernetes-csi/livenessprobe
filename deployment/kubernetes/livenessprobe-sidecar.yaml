@@ -1,0 +1,22 @@
+#
+# This yaml must be used ONLY as a side car for CSI driver
+#
+  - name: liveness-probe
+    image: quay.io/k8scsi/livenessprobe:v0.2.0
+    imagePullPolicy: Always
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do sleep 10;done"]    
+    livenessProbe:
+      exec:
+        command:
+        - ./livenessprobe
+        - --v=6
+        - --csi-address=/csi/csi.sock
+        - --connection-timeout=3s
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 2
+      failureThreshold: 1 
+    volumeMounts:
+    - mountPath: /csi
+      name: socket-dir
