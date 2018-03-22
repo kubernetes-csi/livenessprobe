@@ -67,7 +67,7 @@ func NewConnection(
 }
 
 func connect(address string, timeout time.Duration) (*grpc.ClientConn, error) {
-	glog.V(2).Infof("Connecting to %s", address)
+	glog.Infof("Connecting to %s", address)
 	dialOptions := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithBackoffMaxDelay(time.Second),
@@ -87,14 +87,14 @@ func connect(address string, timeout time.Duration) (*grpc.ClientConn, error) {
 	defer cancel()
 	for {
 		if !conn.WaitForStateChange(ctx, conn.GetState()) {
-			glog.V(4).Infof("Connection timed out")
+			glog.Infof("Connection timed out")
 			return conn, nil // return nil, subsequent GetPluginInfo will show the real connection error
 		}
 		if conn.GetState() == connectivity.Ready {
-			glog.V(3).Infof("Connected")
+			glog.Infof("Connected")
 			return conn, nil
 		}
-		glog.V(4).Infof("Still trying, connection is %s", conn.GetState())
+		glog.Infof("Still trying, connection is %s", conn.GetState())
 	}
 }
 
@@ -147,10 +147,10 @@ func (c *csiConnection) Close() error {
 }
 
 func logGRPC(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	glog.V(5).Infof("GRPC call: %s", method)
-	glog.V(5).Infof("GRPC request: %+v", req)
+	glog.Infof("GRPC call: %s", method)
+	glog.Infof("GRPC request: %+v", req)
 	err := invoker(ctx, method, req, reply, cc, opts...)
-	glog.V(5).Infof("GRPC response: %+v", reply)
-	glog.V(5).Infof("GRPC error: %v", err)
+	glog.Infof("GRPC response: %+v", reply)
+	glog.Infof("GRPC error: %v", err)
 	return err
 }
