@@ -16,9 +16,12 @@ See CSI spec for more information about Probe API call.
 ## Livenessprobe
 ### Configuration Requirements
 
-* --v defines level of logging
-* --csi-address path to the location of csi socket opened by the ddriver
-* --connection-timeout  time to wait for the driver to return reply on Probe request
+*  -connection-timeout duration
+       Timeout for waiting for CSI driver socket in seconds. (default 30s)
+*  -csi-address string
+       Address of the CSI driver socket. (default "/run/csi/socket")
+*  -health-port string
+       TCP ports for listening healthz requests (default "9808")
 
 ### Compiling
 Livenessprobe can be compiled in a form of a binary file or in a form of a container. When compiled
@@ -49,25 +52,60 @@ quay.io/k8scsi/livenessprobe                    canary     8f65dd5f789a        1
 Below is an example of sidecar container which needs to be added to the CSI driver yaml.
 
 ```yaml
-  - name: liveness-probe
-    image: quay.io/k8scsi/livenessprobe:v0.2.0
+  - name: hostpath-driver
+    image: quay.io/k8scsi/hostpathplugin:v0.2.0
     imagePullPolicy: Always
-    command: ["/bin/sh"]
-    args: ["-c", "while true; do sleep 10;done"]    
+    securityContext:
+      privileged: true
+#
+# Defining port which will be used to GET plugin health status
+# 9808 is default, but can be changed.
+#
+    ports:
+    - containerPort: 9808
+      name: healthz
+      protocol: TCP
     livenessProbe:
-      exec:
-        command:
-        - ./livenessprobe
-        - --v=6
-        - --csi-address=/csi/csi.sock
-        - --connection-timeout=3s
+      failureThreshold: 5
+      httpGet:
+        path: /healthz
+        port: healthz
       initialDelaySeconds: 10
       timeoutSeconds: 3
       periodSeconds: 2
-      failureThreshold: 1 
+      failureThreshold: 1
+# 
+   volumeMounts:
+    - mountPath: /csi
+      name: socket-dir
+    - mountPath: /var/lib/kubelet/pods
+      mountPropagation: Bidirectional
+      name: mountpoint-dir
+    args:
+    - --v=5
+    - --endpoint=$(CSI_ENDPOINT)
+    - --nodeid=$(KUBE_NODE_NAME)
+    env:
+    - name: CSI_ENDPOINT
+      value: unix:///csi/csi.sock
+    - name: KUBE_NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+#
+# Spec for liveness probe sidecar container
+# 
+ - name: liveness-probe
+    imagePullPolicy: Always
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
+    image: quay.io/k8scsi/livenessprobe:v0.2.0
+    args:
+    - --csi-address=/csi/csi.sock
+    - --connection-timeout=3s
+#
 
 ```
 
