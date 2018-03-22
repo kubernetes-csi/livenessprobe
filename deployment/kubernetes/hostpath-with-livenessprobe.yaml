@@ -102,22 +102,23 @@ kind: Pod
 metadata:
   labels:
     app: hostpath-driver
-  name: csi-pod
+  name: csi-hostpath-plugin
   namespace: default
 spec:
   serviceAccount: csi-service-account 
   containers:
-  - args:
+  - name: external-provisioner
+    args:
     - --v=5
     - --provisioner=csi-hostpath
     - --csi-address=/csi/csi.sock
     image: quay.io/k8scsi/csi-provisioner:v0.2.0
     imagePullPolicy: Always
-    name: external-provisioner
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
-  - args:
+  - name: driver-registrar
+    args:
     - --v=5
     - --csi-address=/csi/csi.sock
     env:
@@ -128,11 +129,11 @@ spec:
           fieldPath: spec.nodeName
     image: quay.io/k8scsi/driver-registrar:v0.2.0
     imagePullPolicy: Always
-    name: driver-registrar
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
-  - args:
+  - name: external-attacher
+    args:
     - --v=5
     - --csi-address=$(ADDRESS)
     env:
@@ -140,11 +141,34 @@ spec:
       value: /csi/csi.sock
     image: quay.io/k8scsi/csi-attacher:v0.2.0 
     imagePullPolicy: Always
-    name: external-attacher
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
-  - args:
+  - name: hostpath-driver
+    image: quay.io/k8scsi/hostpathplugin:v0.2.0
+    imagePullPolicy: Always
+    securityContext:
+      privileged: true
+    ports:
+    - containerPort: 9808
+      name: healthz
+      protocol: TCP
+    livenessProbe:
+      failureThreshold: 5
+      httpGet:
+        path: /healthz
+        port: healthz
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 2
+      failureThreshold: 1
+    volumeMounts:
+    - mountPath: /csi
+      name: socket-dir
+    - mountPath: /var/lib/kubelet/pods
+      mountPropagation: Bidirectional
+      name: mountpoint-dir
+    args:
     - --v=5
     - --endpoint=$(CSI_ENDPOINT)
     - --nodeid=$(KUBE_NODE_NAME)
@@ -156,36 +180,15 @@ spec:
         fieldRef:
           apiVersion: v1
           fieldPath: spec.nodeName
-    image: quay.io/k8scsi/hostpathplugin:v0.2.0
-    imagePullPolicy: Always
-    name: hostpath-driver
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - mountPath: /csi
-      name: socket-dir
-    - mountPath: /var/lib/kubelet/pods
-      mountPropagation: Bidirectional
-      name: mountpoint-dir
   - name: liveness-probe
-    image: quay.io/k8scsi/livenessprobe:v0.2.0
     imagePullPolicy: Always
-    command: ["/bin/sh"]
-    args: ["-c", "while true; do sleep 10;done"]    
-    livenessProbe:
-      exec:
-        command:
-        - ./livenessprobe
-        - --v=6
-        - --csi-address=/csi/csi.sock
-        - --connection-timeout=3s
-      initialDelaySeconds: 10
-      timeoutSeconds: 3
-      periodSeconds: 2
-      failureThreshold: 1 
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
+    image: quay.io/k8scsi/livenessprobe:v0.2.0
+    args:
+    - --csi-address=/csi/csi.sock
+    - --connection-timeout=3s
   volumes:
   - hostPath:
       path: /var/lib/kubelet/plugins/csi-hostpath

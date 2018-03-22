@@ -19,7 +19,8 @@ package main
 import (
 	"context"
 	"flag"
-	"os"
+	"net"
+	"net/http"
 	"time"
 
 	"github.com/golang/glog"
@@ -37,51 +38,68 @@ var (
 	// kubeconfig        = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Required only when running out of cluster.")
 	connectionTimeout = flag.Duration("connection-timeout", 30*time.Second, "Timeout for waiting for CSI driver socket in seconds.")
 	csiAddress        = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	healthzPort       = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
 )
+
+func runProbe(ctx context.Context) error {
+
+	// Connect to CSI.
+	glog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
+	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
+	if err != nil {
+		return err
+	}
+
+	// Get CSI driver name.
+	glog.Infof("Calling CSI driver to discover driver name.")
+	csiDriverName, err := csiConn.GetDriverName(ctx)
+	if err != nil {
+		return err
+	}
+	glog.Infof("CSI driver name: %q", csiDriverName)
+
+	// Get CSI Driver Node ID
+	glog.Infof("Calling CSI driver to discover node ID.")
+	csiDriverNodeID, err := csiConn.NodeGetId(ctx)
+	if err != nil {
+		return err
+	}
+	glog.Infof("CSI driver node ID: %q", csiDriverNodeID)
+
+	// Sending Probe request
+	glog.Infof("Sending probe request to CSI driver.")
+	if err := csiConn.LivenessProbe(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func chekcHealth(w http.ResponseWriter, req *http.Request) {
+
+	glog.Infof("Request: %s from: %s\n", req.URL.Path, req.RemoteAddr)
+	ctx, cancel := context.WithTimeout(context.Background(), *connectionTimeout)
+	defer cancel()
+	err := runProbe(ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		glog.Infof("Health check failed with: %v.", err)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`ok`))
+		glog.Infof("Health check succeeded.")
+	}
+}
 
 func main() {
 	flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	// Connect to CSI.
-	glog.V(1).Infof("Attempting to open a gRPC connection with: %q", csiAddress)
-	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
+	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
+	http.HandleFunc("/healthz", chekcHealth)
+	glog.Infof("Serving requests to /healthz on: %s", addr)
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
-		glog.Error(err.Error())
-		os.Exit(1)
+		glog.Fatalf("failed to start http server with error: %v", err)
 	}
-
-	// Get CSI driver name.
-	glog.V(1).Infof("Calling CSI driver to discover driver name.")
-	ctx, cancel := context.WithTimeout(context.Background(), csiTimeout)
-	defer cancel()
-	csiDriverName, err := csiConn.GetDriverName(ctx)
-	if err != nil {
-		glog.Error(err.Error())
-		os.Exit(1)
-	}
-	glog.V(2).Infof("CSI driver name: %q", csiDriverName)
-
-	// Get CSI Driver Node ID
-	glog.V(1).Infof("Calling CSI driver to discover node ID.")
-	ctx, cancel = context.WithTimeout(context.Background(), csiTimeout)
-	defer cancel()
-	csiDriverNodeID, err := csiConn.NodeGetId(ctx)
-	if err != nil {
-		glog.Error(err.Error())
-		os.Exit(1)
-	}
-	glog.V(2).Infof("CSI driver node ID: %q", csiDriverNodeID)
-
-	// Sending Probe request
-	glog.V(1).Infof("Sending probe request to CSI driver.")
-	ctx, cancel = context.WithTimeout(context.Background(), csiTimeout)
-	defer cancel()
-	err = csiConn.LivenessProbe(ctx)
-	if err != nil {
-		glog.Error(err.Error())
-		os.Exit(1)
-	}
-	// Liveness Probe was sucessfuly
-	os.Exit(0)
 }
