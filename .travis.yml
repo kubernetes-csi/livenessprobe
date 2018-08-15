@@ -1,7 +1,12 @@
 language: go
 
+services:
+  - docker
+
+# Needed for e2e tests
 sudo: true
-go: 1.9.x
+
+go: 1.10.x
 go_import_path: github.com/kubernetes-csi/livenessprobe
 install:
   - go get -u github.com/golang/dep/cmd/dep
@@ -11,6 +16,7 @@ script:
 - go fmt $(go list ./... | grep -v vendor) | wc -l | grep 0
 - go vet $(go list ./... | grep -v vendor)
 - go test $(go list ./... | grep -v vendor)
+- ./hack/e2e-livenessprobe.sh
 after_success:
   - if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       sudo make livenessprobe-container;
