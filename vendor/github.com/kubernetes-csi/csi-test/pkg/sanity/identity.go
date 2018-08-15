@@ -17,39 +17,83 @@ limitations under the License.
 package sanity
 
 import (
+	"context"
+	"fmt"
 	"regexp"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
-	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/container-storage-interface/spec/lib/go/csi/v0"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-// TODO: Tests for GetPluginCapabilities
-
-// TODO: Tests for Probe
-
-var _ = Describe("GetPluginInfo [Identity Server]", func() {
+var _ = DescribeSanity("Identity Service", func(sc *SanityContext) {
 	var (
 		c csi.IdentityClient
 	)
 
 	BeforeEach(func() {
-		c = csi.NewIdentityClient(conn)
+		c = csi.NewIdentityClient(sc.Conn)
 	})
 
-	It("should return appropriate information", func() {
-		req := &csi.GetPluginInfoRequest{}
-		res, err := c.GetPluginInfo(context.Background(), req)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(res).NotTo(BeNil())
+	Describe("GetPluginCapabilities", func() {
+		It("should return appropriate capabilities", func() {
+			req := &csi.GetPluginCapabilitiesRequest{}
+			res, err := c.GetPluginCapabilities(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
 
-		By("verifying name size and characters")
-		Expect(res.GetName()).ToNot(HaveLen(0))
-		Expect(len(res.GetName())).To(BeNumerically("<=", 63))
-		Expect(regexp.
-			MustCompile("^[a-zA-Z][A-Za-z0-9-\\.\\_]{0,61}[a-zA-Z]$").
-			MatchString(res.GetName())).To(BeTrue())
+			By("checking successful response")
+			Expect(res.GetCapabilities()).NotTo(BeNil())
+			for _, cap := range res.GetCapabilities() {
+				switch cap.GetService().GetType() {
+				case csi.PluginCapability_Service_CONTROLLER_SERVICE:
+				case csi.PluginCapability_Service_ACCESSIBILITY_CONSTRAINTS:
+				default:
+					Fail(fmt.Sprintf("Unknown capability: %v\n", cap.GetService().GetType()))
+				}
+			}
+
+		})
+
+	})
+
+	Describe("Probe", func() {
+		It("should return appropriate information", func() {
+			req := &csi.ProbeRequest{}
+			res, err := c.Probe(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+
+			By("verifying return status")
+			serverError, ok := status.FromError(err)
+			Expect(ok).To(BeTrue())
+			Expect(serverError.Code() == codes.FailedPrecondition ||
+				serverError.Code() == codes.OK).To(BeTrue())
+
+			if res.GetReady() != nil {
+				Expect(res.GetReady().GetValue() == true ||
+					res.GetReady().GetValue() == false).To(BeTrue())
+			}
+		})
+	})
+
+	Describe("GetPluginInfo", func() {
+		It("should return appropriate information", func() {
+			req := &csi.GetPluginInfoRequest{}
+			res, err := c.GetPluginInfo(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).NotTo(BeNil())
+
+			By("verifying name size and characters")
+			Expect(res.GetName()).ToNot(HaveLen(0))
+			Expect(len(res.GetName())).To(BeNumerically("<=", 63))
+			Expect(regexp.
+				MustCompile("^[a-zA-Z][A-Za-z0-9-\\.\\_]{0,61}[a-zA-Z]$").
+				MatchString(res.GetName())).To(BeTrue())
+		})
 	})
 })
