@@ -41,14 +41,7 @@ var (
 	healthzPort       = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
 )
 
-func runProbe(ctx context.Context) error {
-
-	// Connect to CSI.
-	glog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
-	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
-	if err != nil {
-		return err
-	}
+func runProbe(ctx context.Context, csiConn connection.CSIConnection) error {
 
 	// Get CSI driver name.
 	glog.Infof("Calling CSI driver to discover driver name.")
@@ -74,13 +67,29 @@ func runProbe(ctx context.Context) error {
 	return nil
 }
 
+func getCSIConnection() (connection.CSIConnection, error) {
+	// Connect to CSI.
+	glog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
+	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
+	if err != nil {
+		return nil, err
+	}
+	return csiConn, nil
+}
+
 func chekcHealth(w http.ResponseWriter, req *http.Request) {
 
 	glog.Infof("Request: %s from: %s\n", req.URL.Path, req.RemoteAddr)
+	csiConn, err := getCSIConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		glog.Infof("Failed to get connection to CSI  with error: %v.", err)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), *connectionTimeout)
 	defer cancel()
-	err := runProbe(ctx)
-	if err != nil {
+	if err := runProbe(ctx, csiConn); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		glog.Infof("Health check failed with: %v.", err)
