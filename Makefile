@@ -13,7 +13,9 @@
 # limitations under the License.
 
 REGISTRY_NAME = quay.io/k8scsi
-IMAGE_VERSION = canary 
+IMAGE_VERSION = canary
+IMAGE_NAME=livenessprobe
+IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
 .PHONY: all liveness clean test
 
@@ -27,14 +29,17 @@ all: livenessprobe
 
 livenessprobe:
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe ./cmd 
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe ./cmd
 
 macos-livenessprobe:
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe.osx ./cmd 
+	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe.osx ./cmd
 
 livenessprobe-container: livenessprobe
-	docker build -t $(REGISTRY_NAME)/livenessprobe:$(IMAGE_VERSION) -f ./Dockerfile .
+	docker build -t $(IMAGE_TAG) -f ./Dockerfile .
+
+push: livenessprobe-container
+	docker push $(IMAGE_TAG)
 
 clean:
 	rm -rf bin
