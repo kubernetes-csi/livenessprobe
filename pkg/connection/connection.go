@@ -36,9 +36,6 @@ type CSIConnection interface {
 	// call.
 	GetDriverName(ctx context.Context) (string, error)
 
-	// NodeGetId returns node ID of the current according to the CSI driver.
-	NodeGetId(ctx context.Context) (string, error)
-
 	// Liveness Probe
 	LivenessProbe(ctx context.Context) error
 
@@ -124,22 +121,6 @@ func (c *csiConnection) LivenessProbe(ctx context.Context) error {
 		return err
 	}
 	return nil
-}
-
-func (c *csiConnection) NodeGetId(ctx context.Context) (string, error) {
-	client := csi.NewNodeClient(c.conn)
-
-	req := csi.NodeGetIdRequest{}
-
-	rsp, err := client.NodeGetId(ctx, &req)
-	if err != nil {
-		return "", err
-	}
-	nodeID := rsp.GetNodeId()
-	if nodeID == "" {
-		return "", fmt.Errorf("node ID is empty")
-	}
-	return nodeID, nil
 }
 
 func (c *csiConnection) Close() error {

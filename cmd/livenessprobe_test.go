@@ -71,6 +71,14 @@ func TestProbe(t *testing.T) {
 	defer csiConn.Close()
 
 	var injectedErr error
+
+	// Setting up expected calls' responses
+	inPlugin := &csi.GetPluginInfoRequest{}
+	outPlugin := &csi.GetPluginInfoResponse{
+		Name: "foo/bar",
+	}
+	idServer.EXPECT().GetPluginInfo(gomock.Any(), inPlugin).Return(outPlugin, injectedErr).Times(1)
+
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
