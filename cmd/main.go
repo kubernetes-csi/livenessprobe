@@ -42,7 +42,6 @@ var (
 )
 
 func runProbe(ctx context.Context, csiConn connection.CSIConnection) error {
-
 	// Get CSI driver name.
 	glog.Infof("Calling CSI driver to discover driver name.")
 	csiDriverName, err := csiConn.GetDriverName(ctx)
@@ -50,15 +49,6 @@ func runProbe(ctx context.Context, csiConn connection.CSIConnection) error {
 		return err
 	}
 	glog.Infof("CSI driver name: %q", csiDriverName)
-
-	// Get CSI Driver Node ID
-	glog.Infof("Calling CSI driver to discover node ID.")
-	csiDriverNodeID, err := csiConn.NodeGetId(ctx)
-	if err != nil {
-		return err
-	}
-	glog.Infof("CSI driver node ID: %q", csiDriverNodeID)
-
 	// Sending Probe request
 	glog.Infof("Sending probe request to CSI driver.")
 	if err := csiConn.LivenessProbe(ctx); err != nil {

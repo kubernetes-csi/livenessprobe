@@ -62,7 +62,7 @@ func createMockServer(t *testing.T) (
 }
 
 func TestProbe(t *testing.T) {
-	mockController, driver, idServer, _, nodeServer, csiConn, err := createMockServer(t)
+	mockController, driver, idServer, _, _, csiConn, err := createMockServer(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,19 +70,15 @@ func TestProbe(t *testing.T) {
 	defer driver.Stop()
 	defer csiConn.Close()
 
+	var injectedErr error
+
 	// Setting up expected calls' responses
 	inPlugin := &csi.GetPluginInfoRequest{}
 	outPlugin := &csi.GetPluginInfoResponse{
 		Name: "foo/bar",
 	}
-	var injectedErr error
 	idServer.EXPECT().GetPluginInfo(gomock.Any(), inPlugin).Return(outPlugin, injectedErr).Times(1)
 
-	inNode := &csi.NodeGetIdRequest{}
-	outNode := &csi.NodeGetIdResponse{
-		NodeId: "test_node_id",
-	}
-	nodeServer.EXPECT().NodeGetId(gomock.Any(), inNode).Return(outNode, injectedErr).Times(1)
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
