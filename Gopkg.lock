@@ -42,15 +42,15 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:d17a296973591f13eed8399016d5ec748cfb9c92086a84e00b33139b92ba4858"
+  branch = "master"
+  digest = "1:79848f850d0d15b2413a7285441a7fd13ed8a901ebe57d59f1e49759c103b930"
   name = "github.com/kubernetes-csi/csi-test"
   packages = [
     "driver",
     "utils",
   ]
   pruneopts = ""
-  revision = "31b2baed861ae5c166922808be5d1982346adf7d"
-  version = "v0.1.0-2"
+  revision = "619da6853e10bef67ddcc8f1c2b68b73154bf11d"
 
 [[projects]]
   branch = "master"

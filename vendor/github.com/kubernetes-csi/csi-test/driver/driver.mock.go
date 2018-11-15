@@ -34,6 +34,19 @@ func (m *MockIdentityServer) EXPECT() *MockIdentityServerMockRecorder {
 	return m.recorder
 }
 
+// GetPluginCapabilities mocks base method
+func (m *MockIdentityServer) GetPluginCapabilities(arg0 context.Context, arg1 *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
+	ret := m.ctrl.Call(m, "GetPluginCapabilities", arg0, arg1)
+	ret0, _ := ret[0].(*csi.GetPluginCapabilitiesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPluginCapabilities indicates an expected call of GetPluginCapabilities
+func (mr *MockIdentityServerMockRecorder) GetPluginCapabilities(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPluginCapabilities", reflect.TypeOf((*MockIdentityServer)(nil).GetPluginCapabilities), arg0, arg1)
+}
+
 // GetPluginInfo mocks base method
 func (m *MockIdentityServer) GetPluginInfo(arg0 context.Context, arg1 *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
 	ret := m.ctrl.Call(m, "GetPluginInfo", arg0, arg1)
@@ -47,17 +60,17 @@ func (mr *MockIdentityServerMockRecorder) GetPluginInfo(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPluginInfo", reflect.TypeOf((*MockIdentityServer)(nil).GetPluginInfo), arg0, arg1)
 }
 
-// GetSupportedVersions mocks base method
-func (m *MockIdentityServer) GetSupportedVersions(arg0 context.Context, arg1 *csi.GetSupportedVersionsRequest) (*csi.GetSupportedVersionsResponse, error) {
-	ret := m.ctrl.Call(m, "GetSupportedVersions", arg0, arg1)
-	ret0, _ := ret[0].(*csi.GetSupportedVersionsResponse)
+// Probe mocks base method
+func (m *MockIdentityServer) Probe(arg0 context.Context, arg1 *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+	ret := m.ctrl.Call(m, "Probe", arg0, arg1)
+	ret0, _ := ret[0].(*csi.ProbeResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSupportedVersions indicates an expected call of GetSupportedVersions
-func (mr *MockIdentityServerMockRecorder) GetSupportedVersions(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupportedVersions", reflect.TypeOf((*MockIdentityServer)(nil).GetSupportedVersions), arg0, arg1)
+// Probe indicates an expected call of Probe
+func (mr *MockIdentityServerMockRecorder) Probe(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Probe", reflect.TypeOf((*MockIdentityServer)(nil).Probe), arg0, arg1)
 }
 
 // MockControllerServer is a mock of ControllerServer interface
@@ -96,19 +109,6 @@ func (mr *MockControllerServerMockRecorder) ControllerGetCapabilities(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerGetCapabilities", reflect.TypeOf((*MockControllerServer)(nil).ControllerGetCapabilities), arg0, arg1)
 }
 
-// ControllerProbe mocks base method
-func (m *MockControllerServer) ControllerProbe(arg0 context.Context, arg1 *csi.ControllerProbeRequest) (*csi.ControllerProbeResponse, error) {
-	ret := m.ctrl.Call(m, "ControllerProbe", arg0, arg1)
-	ret0, _ := ret[0].(*csi.ControllerProbeResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ControllerProbe indicates an expected call of ControllerProbe
-func (mr *MockControllerServerMockRecorder) ControllerProbe(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerProbe", reflect.TypeOf((*MockControllerServer)(nil).ControllerProbe), arg0, arg1)
-}
-
 // ControllerPublishVolume mocks base method
 func (m *MockControllerServer) ControllerPublishVolume(arg0 context.Context, arg1 *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
 	ret := m.ctrl.Call(m, "ControllerPublishVolume", arg0, arg1)
@@ -135,6 +135,19 @@ func (mr *MockControllerServerMockRecorder) ControllerUnpublishVolume(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerUnpublishVolume", reflect.TypeOf((*MockControllerServer)(nil).ControllerUnpublishVolume), arg0, arg1)
 }
 
+// CreateSnapshot mocks base method
+func (m *MockControllerServer) CreateSnapshot(arg0 context.Context, arg1 *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+	ret := m.ctrl.Call(m, "CreateSnapshot", arg0, arg1)
+	ret0, _ := ret[0].(*csi.CreateSnapshotResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSnapshot indicates an expected call of CreateSnapshot
+func (mr *MockControllerServerMockRecorder) CreateSnapshot(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSnapshot", reflect.TypeOf((*MockControllerServer)(nil).CreateSnapshot), arg0, arg1)
+}
+
 // CreateVolume mocks base method
 func (m *MockControllerServer) CreateVolume(arg0 context.Context, arg1 *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	ret := m.ctrl.Call(m, "CreateVolume", arg0, arg1)
@@ -146,6 +159,19 @@ func (m *MockControllerServer) CreateVolume(arg0 context.Context, arg1 *csi.Crea
 // CreateVolume indicates an expected call of CreateVolume
 func (mr *MockControllerServerMockRecorder) CreateVolume(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateVolume", reflect.TypeOf((*MockControllerServer)(nil).CreateVolume), arg0, arg1)
+}
+
+// DeleteSnapshot mocks base method
+func (m *MockControllerServer) DeleteSnapshot(arg0 context.Context, arg1 *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+	ret := m.ctrl.Call(m, "DeleteSnapshot", arg0, arg1)
+	ret0, _ := ret[0].(*csi.DeleteSnapshotResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSnapshot indicates an expected call of DeleteSnapshot
+func (mr *MockControllerServerMockRecorder) DeleteSnapshot(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSnapshot", reflect.TypeOf((*MockControllerServer)(nil).DeleteSnapshot), arg0, arg1)
 }
 
 // DeleteVolume mocks base method
@@ -172,6 +198,19 @@ func (m *MockControllerServer) GetCapacity(arg0 context.Context, arg1 *csi.GetCa
 // GetCapacity indicates an expected call of GetCapacity
 func (mr *MockControllerServerMockRecorder) GetCapacity(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCapacity", reflect.TypeOf((*MockControllerServer)(nil).GetCapacity), arg0, arg1)
+}
+
+// ListSnapshots mocks base method
+func (m *MockControllerServer) ListSnapshots(arg0 context.Context, arg1 *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+	ret := m.ctrl.Call(m, "ListSnapshots", arg0, arg1)
+	ret0, _ := ret[0].(*csi.ListSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSnapshots indicates an expected call of ListSnapshots
+func (mr *MockControllerServerMockRecorder) ListSnapshots(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSnapshots", reflect.TypeOf((*MockControllerServer)(nil).ListSnapshots), arg0, arg1)
 }
 
 // ListVolumes mocks base method
@@ -223,19 +262,6 @@ func (m *MockNodeServer) EXPECT() *MockNodeServerMockRecorder {
 	return m.recorder
 }
 
-// GetNodeID mocks base method
-func (m *MockNodeServer) GetNodeID(arg0 context.Context, arg1 *csi.GetNodeIDRequest) (*csi.GetNodeIDResponse, error) {
-	ret := m.ctrl.Call(m, "GetNodeID", arg0, arg1)
-	ret0, _ := ret[0].(*csi.GetNodeIDResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetNodeID indicates an expected call of GetNodeID
-func (mr *MockNodeServerMockRecorder) GetNodeID(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeID", reflect.TypeOf((*MockNodeServer)(nil).GetNodeID), arg0, arg1)
-}
-
 // NodeGetCapabilities mocks base method
 func (m *MockNodeServer) NodeGetCapabilities(arg0 context.Context, arg1 *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
 	ret := m.ctrl.Call(m, "NodeGetCapabilities", arg0, arg1)
@@ -249,17 +275,30 @@ func (mr *MockNodeServerMockRecorder) NodeGetCapabilities(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeGetCapabilities", reflect.TypeOf((*MockNodeServer)(nil).NodeGetCapabilities), arg0, arg1)
 }
 
-// NodeProbe mocks base method
-func (m *MockNodeServer) NodeProbe(arg0 context.Context, arg1 *csi.NodeProbeRequest) (*csi.NodeProbeResponse, error) {
-	ret := m.ctrl.Call(m, "NodeProbe", arg0, arg1)
-	ret0, _ := ret[0].(*csi.NodeProbeResponse)
+// NodeGetInfo mocks base method
+func (m *MockNodeServer) NodeGetInfo(arg0 context.Context, arg1 *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
+	ret := m.ctrl.Call(m, "NodeGetInfo", arg0, arg1)
+	ret0, _ := ret[0].(*csi.NodeGetInfoResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// NodeProbe indicates an expected call of NodeProbe
-func (mr *MockNodeServerMockRecorder) NodeProbe(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeProbe", reflect.TypeOf((*MockNodeServer)(nil).NodeProbe), arg0, arg1)
+// NodeGetInfo indicates an expected call of NodeGetInfo
+func (mr *MockNodeServerMockRecorder) NodeGetInfo(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeGetInfo", reflect.TypeOf((*MockNodeServer)(nil).NodeGetInfo), arg0, arg1)
+}
+
+// NodeGetVolumeStats mocks base method
+func (m *MockNodeServer) NodeGetVolumeStats(arg0 context.Context, arg1 *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	ret := m.ctrl.Call(m, "NodeGetVolumeStats", arg0, arg1)
+	ret0, _ := ret[0].(*csi.NodeGetVolumeStatsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NodeGetVolumeStats indicates an expected call of NodeGetVolumeStats
+func (mr *MockNodeServerMockRecorder) NodeGetVolumeStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeGetVolumeStats", reflect.TypeOf((*MockNodeServer)(nil).NodeGetVolumeStats), arg0, arg1)
 }
 
 // NodePublishVolume mocks base method
@@ -275,6 +314,19 @@ func (mr *MockNodeServerMockRecorder) NodePublishVolume(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodePublishVolume", reflect.TypeOf((*MockNodeServer)(nil).NodePublishVolume), arg0, arg1)
 }
 
+// NodeStageVolume mocks base method
+func (m *MockNodeServer) NodeStageVolume(arg0 context.Context, arg1 *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+	ret := m.ctrl.Call(m, "NodeStageVolume", arg0, arg1)
+	ret0, _ := ret[0].(*csi.NodeStageVolumeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NodeStageVolume indicates an expected call of NodeStageVolume
+func (mr *MockNodeServerMockRecorder) NodeStageVolume(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeStageVolume", reflect.TypeOf((*MockNodeServer)(nil).NodeStageVolume), arg0, arg1)
+}
+
 // NodeUnpublishVolume mocks base method
 func (m *MockNodeServer) NodeUnpublishVolume(arg0 context.Context, arg1 *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
 	ret := m.ctrl.Call(m, "NodeUnpublishVolume", arg0, arg1)
@@ -286,4 +338,17 @@ func (m *MockNodeServer) NodeUnpublishVolume(arg0 context.Context, arg1 *csi.Nod
 // NodeUnpublishVolume indicates an expected call of NodeUnpublishVolume
 func (mr *MockNodeServerMockRecorder) NodeUnpublishVolume(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeUnpublishVolume", reflect.TypeOf((*MockNodeServer)(nil).NodeUnpublishVolume), arg0, arg1)
+}
+
+// NodeUnstageVolume mocks base method
+func (m *MockNodeServer) NodeUnstageVolume(arg0 context.Context, arg1 *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+	ret := m.ctrl.Call(m, "NodeUnstageVolume", arg0, arg1)
+	ret0, _ := ret[0].(*csi.NodeUnstageVolumeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NodeUnstageVolume indicates an expected call of NodeUnstageVolume
+func (mr *MockNodeServerMockRecorder) NodeUnstageVolume(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeUnstageVolume", reflect.TypeOf((*MockNodeServer)(nil).NodeUnstageVolume), arg0, arg1)
 }

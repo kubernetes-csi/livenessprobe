@@ -1,5 +1,6 @@
 APP_NAME := csi-sanity
 VER :=$(shell git describe)
+RELEASEVER := $(shell git describe --abbrev=0)
 BRANCH := $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 SHA := $(shell git rev-parse --short HEAD)
 ARCH := $(shell go env GOARCH)
@@ -17,7 +18,7 @@ endif
 endif
 
 LDFLAGS :=-ldflags "-w -X github.com/kubernetes-csi/csi-test/cmd/csi-sanity.VERSION=$(VERSION) -extldflags '-z relro -z now'"
-PACKAGE :=$(DIR)/dist/$(APP_NAME)-$(VERSION).$(GOOS).$(ARCH).tar.gz
+PACKAGE :=$(DIR)/dist/$(APP_NAME)-$(RELEASEVER).$(GOOS).$(ARCH).tar.gz
 
 all: $(APP_NAME)
 
@@ -29,9 +30,11 @@ install: $(APP_NAME)
 
 clean:
 	rm -f csi-sanity
+
+dist-clean:
 	rm -rf $(DIR)/dist
 
-dist: $(PACKAGE)
+dist: clean $(PACKAGE)
 
 $(PACKAGE): $(APP_NAME)
 	@echo Packaging Binaries...
@@ -46,16 +49,13 @@ $(PACKAGE): $(APP_NAME)
 linux_amd64_dist:
 	GOOS=linux GOARCH=amd64 $(MAKE) dist
 
-linux_arm_dist:
-	GOOS=linux GOARCH=arm $(MAKE) dist
-
 linux_arm64_dist:
 	GOOS=linux GOARCH=arm64 $(MAKE) dist
 
 darwin_amd64_dist:
 	GOOS=darwin GOARCH=amd64 $(MAKE) dist
 
-release: darwin_amd64_dist linux_arm_dist linux_amd64_dist linux_arm64_dist
+release: dist-clean darwin_amd64_dist linux_amd64_dist linux_arm64_dist
 
 .PHONY: release darwin_amd64_dist linux_arm64_dist linux_amd64_dist \
-	    linux_arm_dist linux_amd64_dist clean
+	    linux_arm_dist linux_amd64_dist clean dist-clean
