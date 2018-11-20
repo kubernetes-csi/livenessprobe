@@ -13,7 +13,7 @@
 # limitations under the License.
 
 REGISTRY_NAME = quay.io/k8scsi
-IMAGE_VERSION = canary
+IMAGE_VERSION = v1.0-canary
 IMAGE_NAME=livenessprobe
 IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_VERSION)
 
