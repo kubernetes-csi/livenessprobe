@@ -25,6 +25,7 @@ import (
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/glog"
+	"github.com/kubernetes-csi/csi-lib-utils/protosanitizer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 )
@@ -129,9 +130,9 @@ func (c *csiConnection) Close() error {
 
 func logGRPC(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	glog.Infof("GRPC call: %s", method)
-	glog.Infof("GRPC request: %+v", req)
+	glog.Infof("GRPC request: %s", protosanitizer.StripSecrets(req))
 	err := invoker(ctx, method, req, reply, cc, opts...)
-	glog.Infof("GRPC response: %+v", reply)
+	glog.Infof("GRPC response: %s", protosanitizer.StripSecrets(reply))
 	glog.Infof("GRPC error: %v", err)
 	return err
 }
