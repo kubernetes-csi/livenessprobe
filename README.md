@@ -3,11 +3,11 @@
 ## Overview
 
 The purpose of liveness probe is to be able to detect liveness of CSI driver
-and in case of as a driver's failure report it by returning non zero return code.
+and in case of a driver's failure, report it by returning non zero return code.
 Livenessprobe leverages CSI Probe API call, which must be answered by CSI
 compatible driver.
-Liveness probe is meant to be used in pair with kubelet's LinessProbe hook, which
-executes it periodically and check the rerutn code. Non zero return code indicates
+Liveness probe is meant to be used in pair with kubelet's LivenessProbe hook, which
+executes it periodically and check the return code. Non zero return code indicates
 to kubelet that pod is not healthy and kubelet schedules pod restart to recover it.
 
 See CSI spec for more information about Probe API call.
