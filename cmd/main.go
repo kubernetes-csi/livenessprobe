@@ -95,7 +95,7 @@ func main() {
 	flag.Parse()
 
 	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
-	http.HandleFunc("/healthz", chekcHealth)
+	http.HandleFunc("/healthz", checkHealth)
 	glog.Infof("Serving requests to /healthz on: %s", addr)
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
