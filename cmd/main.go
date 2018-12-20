@@ -67,8 +67,7 @@ func getCSIConnection() (connection.CSIConnection, error) {
 	return csiConn, nil
 }
 
-func chekcHealth(w http.ResponseWriter, req *http.Request) {
-
+func checkHealth(w http.ResponseWriter, req *http.Request) {
 	glog.Infof("Request: %s from: %s\n", req.URL.Path, req.RemoteAddr)
 	csiConn, err := getCSIConnection()
 	if err != nil {
@@ -77,6 +76,7 @@ func chekcHealth(w http.ResponseWriter, req *http.Request) {
 		glog.Infof("Failed to get connection to CSI  with error: %v.", err)
 		return
 	}
+	defer csiConn.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), *connectionTimeout)
 	defer cancel()
 	if err := runProbe(ctx, csiConn); err != nil {
