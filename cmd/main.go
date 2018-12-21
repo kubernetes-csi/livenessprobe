@@ -51,20 +51,15 @@ func runProbe(ctx context.Context, csiConn connection.CSIConnection) error {
 	glog.Infof("CSI driver name: %q", csiDriverName)
 	// Sending Probe request
 	glog.Infof("Sending probe request to CSI driver.")
-	if err := csiConn.LivenessProbe(ctx); err != nil {
-		return err
-	}
-	return nil
+	err = csiConn.LivenessProbe(ctx)
+	return err
 }
 
 func getCSIConnection() (connection.CSIConnection, error) {
 	// Connect to CSI.
 	glog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
 	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
-	if err != nil {
-		return nil, err
-	}
-	return csiConn, nil
+	return csiConn, err
 }
 
 func checkHealth(w http.ResponseWriter, req *http.Request) {
@@ -73,7 +68,7 @@ func checkHealth(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		glog.Infof("Failed to get connection to CSI  with error: %v.", err)
+		glog.Errorf("Failed to get connection to CSI  with error: %v.", err)
 		return
 	}
 	defer csiConn.Close()
@@ -82,7 +77,7 @@ func checkHealth(w http.ResponseWriter, req *http.Request) {
 	if err := runProbe(ctx, csiConn); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		glog.Infof("Health check failed with: %v.", err)
+		glog.Errorf("Health check failed with: %v.", err)
 	} else {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`ok`))

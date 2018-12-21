@@ -118,10 +118,7 @@ func (c *csiConnection) LivenessProbe(ctx context.Context) error {
 	req := csi.ProbeRequest{}
 
 	_, err := client.Probe(ctx, &req)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (c *csiConnection) Close() error {
