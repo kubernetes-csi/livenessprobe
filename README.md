@@ -73,7 +73,6 @@ Below is an example of sidecar container which needs to be added to the CSI driv
       initialDelaySeconds: 10
       timeoutSeconds: 3
       periodSeconds: 2
-      failureThreshold: 1
 # 
    volumeMounts:
     - mountPath: /csi
