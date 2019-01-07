@@ -14,35 +14,43 @@ See CSI spec for more information about Probe API call.
 [Container Storage Interface (CSI)](https://github.com/container-storage-interface/spec/blob/master/spec.md#probe)
 
 ## Livenessprobe
+
 ### Configuration Requirements
 
-*  -connection-timeout duration
+* -connection-timeout duration
        Timeout for waiting for CSI driver socket in seconds. (default 30s)
-*  -csi-address string
+* -csi-address string
        Address of the CSI driver socket. (default "/run/csi/socket")
-*  -health-port string
+* -health-port string
        TCP ports for listening healthz requests (default "9808")
 
 ### Compiling
+
 Livenessprobe can be compiled in a form of a binary file or in a form of a container. When compiled
 as a binary file, it gets stored in bin folder with the name livenessprobe. When compiled as a container,
 the resulting image is stored in a local docker's image store and tagged as
 quay.io/k8scsi/livenessprobe:canary
 
 To compile just a binary file:
+
 ```
-$ make livenessprobe
+make livenessprobe
 ```
 
 To build a container:
+
 ```
-$ make livenessprobe-container
+make livenessprobe-container
 ```
+
 By running:
+
 ```
-$ docker images | grep livenessprobe
+docker images | grep livenessprobe
 ```
+
 You should see the following line in the output:
+
 ```
 quay.io/k8scsi/livenessprobe                    canary     8f65dd5f789a        16 hours ago        16MB
 ```
@@ -74,7 +82,6 @@ Below is an example of sidecar container which needs to be added to the CSI driv
       timeoutSeconds: 3
       periodSeconds: 2
       failureThreshold: 1
-# 
    volumeMounts:
     - mountPath: /csi
       name: socket-dir
@@ -95,7 +102,7 @@ Below is an example of sidecar container which needs to be added to the CSI driv
           fieldPath: spec.nodeName
 #
 # Spec for liveness probe sidecar container
-# 
+#
  - name: liveness-probe
     imagePullPolicy: Always
     volumeMounts:
@@ -115,8 +122,8 @@ Learn how to engage with the Kubernetes community on the [community page](http:/
 
 You can reach the maintainers of this project at:
 
-- [Slack channel](https://kubernetes.slack.com/messages/sig-storage)
-- [Mailing list](https://groups.google.com/forum/#!forum/kubernetes-sig-storage)
+* [Slack channel](https://kubernetes.slack.com/messages/sig-storage)
+* [Mailing list](https://groups.google.com/forum/#!forum/kubernetes-sig-storage)
 
 ### Code of conduct
 
