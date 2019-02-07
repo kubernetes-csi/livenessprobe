@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang/glog"
+	"k8s.io/klog"
 
 	"github.com/kubernetes-csi/livenessprobe/pkg/connection"
 )
@@ -43,32 +43,32 @@ var (
 
 func runProbe(ctx context.Context, csiConn connection.CSIConnection) error {
 	// Get CSI driver name.
-	glog.Infof("Calling CSI driver to discover driver name.")
+	klog.Infof("Calling CSI driver to discover driver name.")
 	csiDriverName, err := csiConn.GetDriverName(ctx)
 	if err != nil {
 		return err
 	}
-	glog.Infof("CSI driver name: %q", csiDriverName)
+	klog.Infof("CSI driver name: %q", csiDriverName)
 	// Sending Probe request
-	glog.Infof("Sending probe request to CSI driver.")
+	klog.Infof("Sending probe request to CSI driver.")
 	err = csiConn.LivenessProbe(ctx)
 	return err
 }
 
 func getCSIConnection() (connection.CSIConnection, error) {
 	// Connect to CSI.
-	glog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
+	klog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
 	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
 	return csiConn, err
 }
 
 func checkHealth(w http.ResponseWriter, req *http.Request) {
-	glog.Infof("Request: %s from: %s\n", req.URL.Path, req.RemoteAddr)
+	klog.Infof("Request: %s from: %s\n", req.URL.Path, req.RemoteAddr)
 	csiConn, err := getCSIConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		glog.Errorf("Failed to get connection to CSI  with error: %v.", err)
+		klog.Errorf("Failed to get connection to CSI  with error: %v.", err)
 		return
 	}
 	defer csiConn.Close()
@@ -77,23 +77,24 @@ func checkHealth(w http.ResponseWriter, req *http.Request) {
 	if err := runProbe(ctx, csiConn); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		glog.Errorf("Health check failed with: %v.", err)
+		klog.Errorf("Health check failed with: %v.", err)
 	} else {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`ok`))
-		glog.Infof("Health check succeeded.")
+		klog.Infof("Health check succeeded.")
 	}
 }
 
 func main() {
+	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
 
 	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
 	http.HandleFunc("/healthz", checkHealth)
-	glog.Infof("Serving requests to /healthz on: %s", addr)
+	klog.Infof("Serving requests to /healthz on: %s", addr)
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
-		glog.Fatalf("failed to start http server with error: %v", err)
+		klog.Fatalf("failed to start http server with error: %v", err)
 	}
 }

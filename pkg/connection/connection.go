@@ -24,10 +24,10 @@ import (
 	"time"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/golang/glog"
 	"github.com/kubernetes-csi/csi-lib-utils/protosanitizer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"k8s.io/klog"
 )
 
 // CSIConnection is gRPC connection to a remote CSI driver and abstracts all
@@ -65,7 +65,7 @@ func NewConnection(
 }
 
 func connect(address string, timeout time.Duration) (*grpc.ClientConn, error) {
-	glog.Infof("Connecting to %s", address)
+	klog.Infof("Connecting to %s", address)
 	dialOptions := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithBackoffMaxDelay(time.Second),
@@ -85,14 +85,14 @@ func connect(address string, timeout time.Duration) (*grpc.ClientConn, error) {
 	defer cancel()
 	for {
 		if !conn.WaitForStateChange(ctx, conn.GetState()) {
-			glog.Infof("Connection timed out")
+			klog.Infof("Connection timed out")
 			return conn, nil // return nil, subsequent GetPluginInfo will show the real connection error
 		}
 		if conn.GetState() == connectivity.Ready {
-			glog.Infof("Connected")
+			klog.Infof("Connected")
 			return conn, nil
 		}
-		glog.Infof("Still trying, connection is %s", conn.GetState())
+		klog.Infof("Still trying, connection is %s", conn.GetState())
 	}
 }
 
@@ -126,10 +126,10 @@ func (c *csiConnection) Close() error {
 }
 
 func logGRPC(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	glog.Infof("GRPC call: %s", method)
-	glog.Infof("GRPC request: %s", protosanitizer.StripSecrets(req))
+	klog.Infof("GRPC call: %s", method)
+	klog.Infof("GRPC request: %s", protosanitizer.StripSecrets(req))
 	err := invoker(ctx, method, req, reply, cc, opts...)
-	glog.Infof("GRPC response: %s", protosanitizer.StripSecrets(reply))
-	glog.Infof("GRPC error: %v", err)
+	klog.Infof("GRPC response: %s", protosanitizer.StripSecrets(reply))
+	klog.Infof("GRPC error: %v", err)
 	return err
 }
