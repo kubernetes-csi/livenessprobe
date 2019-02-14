@@ -36,7 +36,7 @@ const (
 // Command line flags
 var (
 	// kubeconfig        = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Required only when running out of cluster.")
-	connectionTimeout = flag.Duration("connection-timeout", 30*time.Second, "Timeout for waiting for CSI driver socket in seconds.")
+	connectionTimeout = flag.Duration("connection-timeout", 0, "The --connection-timeout flag is deprecated")
 	csiAddress        = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
 	healthzPort       = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
 )
@@ -56,10 +56,8 @@ func runProbe(ctx context.Context, csiConn connection.CSIConnection) error {
 }
 
 func getCSIConnection() (connection.CSIConnection, error) {
-	// Connect to CSI.
 	klog.Infof("Attempting to open a gRPC connection with: %s", *csiAddress)
-	csiConn, err := connection.NewConnection(*csiAddress, *connectionTimeout)
-	return csiConn, err
+	return connection.NewConnection(*csiAddress)
 }
 
 func checkHealth(w http.ResponseWriter, req *http.Request) {
@@ -72,7 +70,7 @@ func checkHealth(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer csiConn.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), *connectionTimeout)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	if err := runProbe(ctx, csiConn); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -89,6 +87,10 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
+
+	if *connectionTimeout != 0 {
+		klog.Warning("--connection-timeout is deprecated and will have no effect")
+	}
 
 	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
 	http.HandleFunc("/healthz", checkHealth)

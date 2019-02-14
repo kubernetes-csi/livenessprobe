@@ -53,7 +53,7 @@ func createMockServer(t *testing.T) (
 
 	// Create a client connection to it
 	addr := drv.Address()
-	csiConn, err := connection.NewConnection(addr, 10)
+	csiConn, err := connection.NewConnection(addr)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
