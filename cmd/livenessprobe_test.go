@@ -17,14 +17,15 @@ limitations under the License.
 package main
 
 import (
-	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
-	"time"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
+	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
 	"github.com/kubernetes-csi/csi-test/driver"
-	"github.com/kubernetes-csi/livenessprobe/pkg/connection"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -37,7 +38,7 @@ func createMockServer(t *testing.T) (
 	*driver.MockIdentityServer,
 	*driver.MockControllerServer,
 	*driver.MockNodeServer,
-	connection.CSIConnection,
+	*grpc.ClientConn,
 	error) {
 	// Start the mock server
 	mockController := gomock.NewController(t)
@@ -53,7 +54,7 @@ func createMockServer(t *testing.T) (
 
 	// Create a client connection to it
 	addr := drv.Address()
-	csiConn, err := connection.NewConnection(addr)
+	csiConn, err := connlib.Connect(addr)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
@@ -72,20 +73,28 @@ func TestProbe(t *testing.T) {
 
 	var injectedErr error
 
-	// Setting up expected calls' responses
-	inPlugin := &csi.GetPluginInfoRequest{}
-	outPlugin := &csi.GetPluginInfoResponse{
-		Name: "foo/bar",
-	}
-	idServer.EXPECT().GetPluginInfo(gomock.Any(), inPlugin).Return(outPlugin, injectedErr).Times(1)
-
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
-	// Calling Probing function
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := runProbe(ctx, csiConn); err != nil {
-		t.Fatalf("failed to run probe with error: %+v", err)
+
+	hp := &healthProbe{
+		conn:       csiConn,
+		driverName: driverName,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.String() == "/healthz" {
+			hp.checkProbe(rw, req)
+		}
+	}))
+	defer server.Close()
+
+	httpreq, err := http.NewRequest("GET", server.URL+"/healthz", nil)
+	if err != nil {
+		t.Fatalf("failed to build test request for health check: %v", err)
+	}
+	_, err = http.DefaultClient.Do(httpreq)
+	if err != nil {
+		t.Errorf("failed to check probe: %v", err)
 	}
 }
