@@ -29,11 +29,11 @@ all: livenessprobe
 
 livenessprobe:
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe ./cmd
+	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe ./cmd/livenessprobe
 
 macos-livenessprobe:
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe.osx ./cmd
+	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe.osx ./cmd/livenessprobe
 
 livenessprobe-container: livenessprobe
 	docker build -t $(IMAGE_TAG) -f ./Dockerfile .
