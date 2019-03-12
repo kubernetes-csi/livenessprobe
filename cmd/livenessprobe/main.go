@@ -26,6 +26,7 @@ import (
 	"k8s.io/klog"
 
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
+	"github.com/kubernetes-csi/csi-lib-utils/rpc"
 	"google.golang.org/grpc"
 )
 
@@ -48,7 +49,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	defer cancel()
 
 	klog.Infof("Sending probe request to CSI driver %q", h.driverName)
-	ready, err := connlib.Probe(ctx, h.conn)
+	ready, err := rpc.Probe(ctx, h.conn)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -85,7 +86,7 @@ func main() {
 	}
 
 	klog.Infof("calling CSI driver to discover driver name")
-	csiDriverName, err := connlib.GetDriverName(context.Background(), csiConn)
+	csiDriverName, err := rpc.GetDriverName(context.Background(), csiConn)
 	if err != nil {
 		klog.Fatalf("failed to get CSI driver name: %v", err)
 	}
