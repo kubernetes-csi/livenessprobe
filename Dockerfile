@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine
+FROM gcr.io/distroless/static:latest
 LABEL maintainers="Kubernetes Authors"
 LABEL description="CSI Driver liveness probe"
 
