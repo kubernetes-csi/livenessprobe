@@ -12,38 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-REGISTRY_NAME = quay.io/k8scsi
-IMAGE_VERSION = canary
-IMAGE_NAME=livenessprobe
-IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_VERSION)
+CMDS=livenessprobe
+all: build
 
-.PHONY: all liveness clean test
-
-ifdef V
-TESTARGS = -v -args -alsologtostderr -v 5
-else
-TESTARGS =
-endif
-
-all: livenessprobe
-
-livenessprobe:
-	mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe ./cmd/livenessprobe
-
-macos-livenessprobe:
-	mkdir -p bin
-	CGO_ENABLED=0 GOOS=darwin go build -a -ldflags '-extldflags "-static"' -o ./bin/livenessprobe.osx ./cmd/livenessprobe
-
-livenessprobe-container: livenessprobe
-	docker build -t $(IMAGE_TAG) -f ./Dockerfile .
-
-push: livenessprobe-container
-	docker push $(IMAGE_TAG)
-
-clean:
-	rm -rf bin
-
-test:
-	go test `go list ./... | grep -v 'vendor'` $(TESTARGS)
-	go vet `go list ./... | grep -v vendor`
+include release-tools/build.make
