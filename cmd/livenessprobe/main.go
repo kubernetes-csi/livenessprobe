@@ -26,17 +26,19 @@ import (
 	"k8s.io/klog"
 
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
+	"github.com/kubernetes-csi/csi-lib-utils/deprecatedflags"
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
+
 	"google.golang.org/grpc"
 )
 
 // Command line flags
 var (
-	// kubeconfig        = flag.String("kubeconfig", "", "Absolute path to the kubeconfig file. Required only when running out of cluster.")
-	connectionTimeout = flag.Duration("connection-timeout", 0, "The --connection-timeout flag is deprecated")
-	probeTimeout      = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
-	csiAddress        = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
-	healthzPort       = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
+	probeTimeout = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
+	csiAddress   = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	healthzPort  = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
+
+	_ = deprecatedflags.Add("connection-timeout")
 )
 
 type healthProbe struct {
@@ -73,10 +75,6 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
-
-	if *connectionTimeout != 0 {
-		klog.Warning("--connection-timeout is deprecated and will have no effect")
-	}
 
 	csiConn, err := connlib.Connect(*csiAddress)
 	if err != nil {
