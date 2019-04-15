@@ -1,78 +1,44 @@
 # Liveness Probe
 
-## Overview
+The liveness probe is a sidecar container that exposes an HTTP `/healthz`
+endpoint, which serves as kubelet's [livenessProbe hook](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes)
+to monitor health of a CSI driver.
 
-The purpose of liveness probe is to be able to detect liveness of CSI driver
-and in case of a driver's failure, report it by returning non zero return code.
-Livenessprobe leverages CSI Probe API call, which must be answered by CSI
-compatible driver.
-Liveness probe is meant to be used in pair with kubelet's LivenessProbe hook, which
-executes it periodically and check the return code. Non zero return code indicates
-to kubelet that pod is not healthy and kubelet schedules pod restart to recover it.
-
+The liveness probe uses `Probe()` call to check the CSI driver is healthy.
 See CSI spec for more information about Probe API call.
 [Container Storage Interface (CSI)](https://github.com/container-storage-interface/spec/blob/master/spec.md#probe)
 
-## Livenessprobe
+## Compatibility
+This information reflects the head of this branch.
 
-### Configuration Requirements
+| Compatible with CSI Version                                                                | Container Image              | Min K8s Version |
+| ------------------------------------------------------------------------------------------ | -----------------------------| --------------- |
+| [CSI Spec v1.0.0](https://github.com/container-storage-interface/spec/releases/tag/v1.0.0) | quay.io/k8scsi/livenessprobe | 1.13            |
 
-* -connection-timeout duration
-       Timeout for waiting for CSI driver socket in seconds. (default 30s)
-* -csi-address string
-       Address of the CSI driver socket. (default "/run/csi/socket")
-* -health-port string
-       TCP ports for listening healthz requests (default "9808")
 
-### Compiling
+## Usage
 
-Livenessprobe can be compiled in a form of a binary file or in a form of a container. When compiled
-as a binary file, it gets stored in bin folder with the name livenessprobe. When compiled as a container,
-the resulting image is stored in a local docker's image store and tagged as
-quay.io/k8scsi/livenessprobe:canary
-
-To compile just a binary file:
-
-```
-make livenessprobe
-```
-
-To build a container:
-
-```
-make livenessprobe-container
-```
-
-By running:
-
-```
-docker images | grep livenessprobe
-```
-
-You should see the following line in the output:
-
-```
-quay.io/k8scsi/livenessprobe                    canary     8f65dd5f789a        16 hours ago        16MB
-```
-
-### Using livenessprobe
-
-Below is an example of sidecar container which needs to be added to the CSI driver yaml.
+See [hostpath-with-livenessprobe.yaml](deployment/kubernetes/hostpath-with-livenessprobe.yaml)
+for example how to use the liveness probe with a CSI driver. Notice that actual
+`livenessProbe` is set on the container with the CSI driver. This way, Kubernetes
+restarts the CSI driver container when the probe fails. The liveness probe
+sidecar container only provides the HTTP endpoint for the probe and does not
+contain `livenessProbe` section by itself.
 
 ```yaml
+kind: Pod
+spec:
+  containers:
+  # Container with CSI driver
   - name: hostpath-driver
     image: quay.io/k8scsi/hostpathplugin:v0.2.0
-    imagePullPolicy: Always
-    securityContext:
-      privileged: true
-#
-# Defining port which will be used to GET plugin health status
-# 9808 is default, but can be changed.
-#
+    # Defining port which will be used to GET plugin health status
+    # 9808 is default, but can be changed.
     ports:
     - containerPort: 9808
       name: healthz
       protocol: TCP
+    # The probe
     livenessProbe:
       failureThreshold: 5
       httpGet:
@@ -81,40 +47,42 @@ Below is an example of sidecar container which needs to be added to the CSI driv
       initialDelaySeconds: 10
       timeoutSeconds: 3
       periodSeconds: 2
-      failureThreshold: 1
-   volumeMounts:
+    volumeMounts:
     - mountPath: /csi
       name: socket-dir
-    - mountPath: /var/lib/kubelet/pods
-      mountPropagation: Bidirectional
-      name: mountpoint-dir
-    args:
-    - --v=5
-    - --endpoint=$(CSI_ENDPOINT)
-    - --nodeid=$(KUBE_NODE_NAME)
-    env:
-    - name: CSI_ENDPOINT
-      value: unix:///csi/csi.sock
-    - name: KUBE_NODE_NAME
-      valueFrom:
-        fieldRef:
-          apiVersion: v1
-          fieldPath: spec.nodeName
-#
-# Spec for liveness probe sidecar container
-#
+    # ...
+ # The liveness probe sidecar container
  - name: liveness-probe
     imagePullPolicy: Always
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
-    image: quay.io/k8scsi/livenessprobe:v0.2.0
+    image: quay.io/k8scsi/livenessprobe:v1.1.0
     args:
     - --csi-address=/csi/csi.sock
-    - --connection-timeout=3s
-#
-
+    volumeMounts:
+    - mountPath: /csi
+      name: socket-dir
+    # ...
 ```
+
+### Command line options
+
+#### Recommended optional arguments
+
+* `--csi-address <path to CSI socket>`: This is the path to the CSI driver socket inside the pod that the external-provisioner container will use to issue CSI operations (`/run/csi/socket` is used by default).
+
+#### Other recognized arguments
+
+* `--health-port <number>`: TCP ports for listening for HTTP requests (default "9808")
+
+* `--probe-timeout <duration>`: Maximum duration of single `Probe()` call (default "1s").
+
+* All glog / klog arguments are supported, such as `-v <log level>` or `-alsologtostderr`.
+
+#### Deprecated arguments
+
+* `--connection-timeout <duration>`: This option was used to limit establishing connection to CSI driver. Currently, the option does not have any effect and the external-provisioner tries to connect to CSI driver socket indefinitely. It is recommended to run ReadinessProbe on the driver to ensure that the driver comes up in reasonable time.
 
 ## Community, discussion, contribution, and support
 
