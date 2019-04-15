@@ -2,23 +2,23 @@
 
 
 [[projects]]
-  digest = "1:94ffc0947c337d618b6ff5ed9abaddc1217b090c1b3a1ae4739b35b7b25851d5"
+  digest = "1:7f21fa1f8ab9a529dba26a7e9cf20de217c307fa1d96cb599d3afd9e5c83e9d6"
   name = "github.com/container-storage-interface/spec"
   packages = ["lib/go/csi"]
   pruneopts = "NUT"
-  revision = "ed0bb0e1557548aa028307f48728767cfe8f6345"
-  version = "v1.0.0"
+  revision = "f750e6765f5f6b4ac0e13e95214d58901290fb4b"
+  version = "v1.1.0"
 
 [[projects]]
-  digest = "1:bc38c7c481812e178d85160472e231c5e1c9a7f5845d67e23ee4e706933c10d8"
+  digest = "1:b60efdeb75d3c0ceed88783ac2495256aba3491a537d0f31401202579fd62a94"
   name = "github.com/golang/mock"
   packages = ["gomock"]
   pruneopts = "NUT"
-  revision = "c34cdb4725f4c3844d095133c6e40e448b86589b"
-  version = "v1.1.1"
+  revision = "51421b967af1f557f93a59e0057aaf15ca02e29c"
+  version = "v1.2.0"
 
 [[projects]]
-  digest = "1:3b583d3cd8cec5a31ca9f928ddedd17770987daafa8f326b678c54e8e9798430"
+  digest = "1:f0ba580759848d2bb230cb37bc288690f92812d0850112e07ecbd1b727f3d973"
   name = "github.com/golang/protobuf"
   packages = [
     "descriptor",
@@ -31,35 +31,36 @@
     "ptypes/wrappers",
   ]
   pruneopts = "NUT"
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
+  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
+  version = "v1.3.1"
 
 [[projects]]
-  digest = "1:a0892607b4f5385bb9fb12759facc8fad4e61b8b557384e4a078150c6ba43623"
+  digest = "1:d30f642c5423197aeba2c9f4da486602c51564a9d2c71f5725688bd051ab1d4a"
   name = "github.com/kubernetes-csi/csi-lib-utils"
   packages = [
     "connection",
+    "deprecatedflags",
     "protosanitizer",
     "rpc",
   ]
   pruneopts = "NUT"
-  revision = "8053f37bf1d11d769c20f9514538c4b3b906e1f7"
-  version = "v0.4.0-rc1"
+  revision = "b8b7a89535d80e12f2c0f4c53cfb981add8aaca2"
+  version = "v0.6.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:cab5d1fe86e273b35887f707dbec779d77d87613d9f2f14ea23002912197ce81"
+  digest = "1:189ada87769e6bd22de67cf8d5ac2f348070e7bcc4cdc5be3aaa5b19758e8fc2"
   name = "github.com/kubernetes-csi/csi-test"
   packages = [
     "driver",
     "utils",
   ]
   pruneopts = "NUT"
-  revision = "619da6853e10bef67ddcc8f1c2b68b73154bf11d"
+  revision = "5421d9f3c37be3b95b241b44a094a3db11bee789"
+  version = "v2.0.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:98f099782e33665fa7aa22c534581cd4a18f9a06b9af22cf57721019511d74b4"
+  digest = "1:b749e029ef289fc2242b74ac82e8e7bcbd34109daf57b42d30c0804cd635bcc3"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -71,15 +72,15 @@
     "trace",
   ]
   pruneopts = "NUT"
-  revision = "c39426892332e1bb5ec0a434a079bf82f5d30c54"
+  revision = "eb5bcb51f2a31c7d5141d810b70815c05d9c9146"
 
 [[projects]]
   branch = "master"
-  digest = "1:e73252ec48f8c6e92a565b3e1381298bb88d2fe261fc2de619dd5e24a9a663be"
+  digest = "1:6340f2bc34a845d3f5141cb87916197518eebc94490f46aefe430b666a322606"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NUT"
-  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
+  revision = "97732733099d6a942a73b889770774366de963ed"
 
 [[projects]]
   digest = "1:e7071ed636b5422cc51c0e3a6cebc229d6c9fffc528814b519a980641422d619"
@@ -106,31 +107,37 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:077c1c599507b3b3e9156d17d36e1e61928ee9b53a5b420f10f28ebd4a0b275c"
+  digest = "1:c3076e7defee87de1236f1814beb588f40a75544c60121e6eb38b3b3721783e2"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "NUT"
-  revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
+  revision = "64821d5d210748c883cd2b809589555ae4654203"
 
 [[projects]]
-  digest = "1:9b0340b5befd6c99a69affff1ac35003690e3c5d5886e531c09285f6d9445aa9"
+  digest = "1:eb07745d89cce9a7339927b3095aea7083a2cbf60e317568bedcc5da588a2798"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
     "codes",
     "connectivity",
     "credentials",
+    "credentials/internal",
     "encoding",
     "encoding/proto",
     "grpclog",
     "internal",
     "internal/backoff",
+    "internal/balancerload",
+    "internal/binarylog",
     "internal/channelz",
     "internal/envconfig",
     "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/syscall",
     "internal/transport",
     "keepalive",
     "metadata",
@@ -146,16 +153,16 @@
     "tap",
   ]
   pruneopts = "NUT"
-  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
-  version = "v1.14.0"
+  revision = "236199dd5f8031d698fb64091194aecd1c3895b2"
+  version = "v1.20.0"
 
 [[projects]]
-  digest = "1:9cc257b3c9ff6a0158c9c661ab6eebda1fe8a4a4453cd5c4044dc9a2ebfb992b"
+  digest = "1:2c16dda1c44c2564a7818fbacb701323c16d77c21b969987c1bec08d3ee0b050"
   name = "k8s.io/klog"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "a5bc97fbc634d635061f3146511332c7e313a55a"
-  version = "v0.1.0"
+  revision = "e531227889390a39d9533dde61f590fe9f4b0035"
+  version = "v0.3.0"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -164,6 +171,7 @@
     "github.com/container-storage-interface/spec/lib/go/csi",
     "github.com/golang/mock/gomock",
     "github.com/kubernetes-csi/csi-lib-utils/connection",
+    "github.com/kubernetes-csi/csi-lib-utils/deprecatedflags",
     "github.com/kubernetes-csi/csi-lib-utils/rpc",
     "github.com/kubernetes-csi/csi-test/driver",
     "google.golang.org/grpc",
