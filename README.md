@@ -54,9 +54,6 @@ spec:
  # The liveness probe sidecar container
  - name: liveness-probe
     imagePullPolicy: Always
-    volumeMounts:
-    - mountPath: /csi
-      name: socket-dir
     image: quay.io/k8scsi/livenessprobe:v1.1.0
     args:
     - --csi-address=/csi/csi.sock
