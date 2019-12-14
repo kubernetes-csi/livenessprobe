@@ -49,6 +49,7 @@
       name: socket-dir
     image: quay.io/k8scsi/livenessprobe:v0.2.0
     args:
+    - --v=5
     - --csi-address=/csi/csi.sock
     - --connection-timeout=3s
 #
