@@ -50,7 +50,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	klog.Infof("Sending probe request to CSI driver %q", h.driverName)
+	klog.V(5).Infof("Sending probe request to CSI driver %q", h.driverName)
 	ready, err := rpc.Probe(ctx, h.conn)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -68,7 +68,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`ok`))
-	klog.Infof("Health check succeeded")
+	klog.V(5).Infof("Health check succeeded")
 }
 
 func main() {
