@@ -61,7 +61,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 
 	if !ready {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte("driver responded but is not ready"))
 		klog.Error("driver responded but is not ready")
 		return
 	}
