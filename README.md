@@ -77,10 +77,6 @@ spec:
 
 * All glog / klog arguments are supported, such as `-v <log level>` or `-alsologtostderr`.
 
-#### Deprecated arguments
-
-* `--connection-timeout <duration>`: This option was used to limit establishing connection to CSI driver. Currently, the option does not have any effect and the external-provisioner tries to connect to CSI driver socket indefinitely. It is recommended to run ReadinessProbe on the driver to ensure that the driver comes up in reasonable time.
-
 ## Community, discussion, contribution, and support
 
 Learn how to engage with the Kubernetes community on the [community page](http://kubernetes.io/community/).

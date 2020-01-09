@@ -1,5 +1,5 @@
   - name: hostpath-driver
-    image: quay.io/k8scsi/hostpathplugin:v0.2.0
+    image: quay.io/k8scsi/hostpathplugin:canary
     imagePullPolicy: Always
     securityContext:
       privileged: true
@@ -47,9 +47,8 @@
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
-    image: quay.io/k8scsi/livenessprobe:v0.2.0
+    image: quay.io/k8scsi/livenessprobe:canary
     args:
     - --v=5
     - --csi-address=/csi/csi.sock
-    - --connection-timeout=3s
 #
