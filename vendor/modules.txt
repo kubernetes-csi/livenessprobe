@@ -13,7 +13,6 @@ github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
 # github.com/kubernetes-csi/csi-lib-utils v0.6.1
 github.com/kubernetes-csi/csi-lib-utils/connection
-github.com/kubernetes-csi/csi-lib-utils/deprecatedflags
 github.com/kubernetes-csi/csi-lib-utils/protosanitizer
 github.com/kubernetes-csi/csi-lib-utils/rpc
 # github.com/kubernetes-csi/csi-test v2.0.0+incompatible
