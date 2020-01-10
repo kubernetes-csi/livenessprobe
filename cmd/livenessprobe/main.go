@@ -26,7 +26,6 @@ import (
 	"k8s.io/klog"
 
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
-	"github.com/kubernetes-csi/csi-lib-utils/deprecatedflags"
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
 
 	"google.golang.org/grpc"
@@ -37,8 +36,6 @@ var (
 	probeTimeout = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
 	csiAddress   = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
 	healthzPort  = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
-
-	_ = deprecatedflags.Add("connection-timeout")
 )
 
 type healthProbe struct {
