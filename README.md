@@ -18,7 +18,7 @@ This information reflects the head of this branch.
 
 ## Usage
 
-See [hostpath-with-livenessprobe.yaml](deployment/kubernetes/hostpath-with-livenessprobe.yaml)
+See [hostpath-with-livenessprobe.yaml](https://github.com/kubernetes-csi/livenessprobe/blob/master/deployment/kubernetes/livenessprobe-sidecar.yaml)
 for example how to use the liveness probe with a CSI driver. Notice that actual
 `livenessProbe` is set on the container with the CSI driver. This way, Kubernetes
 restarts the CSI driver container when the probe fails. The liveness probe
