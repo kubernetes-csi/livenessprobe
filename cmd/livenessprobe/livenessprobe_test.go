@@ -17,15 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
-	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
 	"github.com/kubernetes-csi/csi-test/driver"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -37,9 +36,7 @@ func createMockServer(t *testing.T) (
 	*driver.MockCSIDriver,
 	*driver.MockIdentityServer,
 	*driver.MockControllerServer,
-	*driver.MockNodeServer,
-	*grpc.ClientConn,
-	error) {
+	*driver.MockNodeServer) {
 	// Start the mock server
 	mockController := gomock.NewController(t)
 	identityServer := driver.NewMockIdentityServer(mockController)
@@ -52,24 +49,16 @@ func createMockServer(t *testing.T) (
 	})
 	drv.Start()
 
-	// Create a client connection to it
-	addr := drv.Address()
-	csiConn, err := connlib.Connect(addr)
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, err
-	}
-
-	return mockController, drv, identityServer, controllerServer, nodeServer, csiConn, nil
+	return mockController, drv, identityServer, controllerServer, nodeServer
 }
 
 func TestProbe(t *testing.T) {
-	mockController, driver, idServer, _, _, csiConn, err := createMockServer(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	mockController, driver, idServer, _, _ := createMockServer(t)
 	defer mockController.Finish()
 	defer driver.Stop()
-	defer csiConn.Close()
+
+	flag.Set("csi-address", driver.Address())
+	flag.Parse()
 
 	var injectedErr error
 
@@ -78,7 +67,6 @@ func TestProbe(t *testing.T) {
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
 
 	hp := &healthProbe{
-		conn:       csiConn,
 		driverName: driverName,
 	}
 

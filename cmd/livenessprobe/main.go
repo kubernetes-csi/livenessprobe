@@ -39,7 +39,6 @@ var (
 )
 
 type healthProbe struct {
-	conn       *grpc.ClientConn
 	driverName string
 }
 
@@ -47,8 +46,17 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
+	conn, err := acquireConnection()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		klog.Errorf("failed to establish connection to CSI driver: %v", err)
+		return
+	}
+	defer conn.Close()
+
 	klog.V(5).Infof("Sending probe request to CSI driver %q", h.driverName)
-	ready, err := rpc.Probe(ctx, h.conn)
+	ready, err := rpc.Probe(ctx, conn)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -68,12 +76,20 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	klog.V(5).Infof("Health check succeeded")
 }
 
+// acquireConnection wraps the connlib.Connect func.
+//
+// NOTE: always open a new connection to avoid the issue reported at
+// https://github.com/kubernetes-csi/livenessprobe/issues/68.
+func acquireConnection() (*grpc.ClientConn, error) {
+	return connlib.Connect(*csiAddress)
+}
+
 func main() {
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	csiConn, err := connlib.Connect(*csiAddress)
+	csiConn, err := acquireConnection()
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
 		// the grpc client is misconfigured rather than an error on the network
@@ -82,13 +98,13 @@ func main() {
 
 	klog.Infof("calling CSI driver to discover driver name")
 	csiDriverName, err := rpc.GetDriverName(context.Background(), csiConn)
+	csiConn.Close()
 	if err != nil {
 		klog.Fatalf("failed to get CSI driver name: %v", err)
 	}
 	klog.Infof("CSI driver name: %q", csiDriverName)
 
 	hp := &healthProbe{
-		conn:       csiConn,
 		driverName: csiDriverName,
 	}
 
