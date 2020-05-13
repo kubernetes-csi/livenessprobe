@@ -34,10 +34,9 @@ import (
 
 // Command line flags
 var (
-	probeTimeout   = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
-	connectTimeout = flag.Duration("connect-timeout", 0, "Limit time to establish a connection to CSI driver")
-	csiAddress     = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
-	healthzPort    = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
+	probeTimeout = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
+	csiAddress   = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	healthzPort  = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
 )
 
 type healthProbe struct {
