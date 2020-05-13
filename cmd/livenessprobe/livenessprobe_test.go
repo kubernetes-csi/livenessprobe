@@ -18,8 +18,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -36,7 +39,8 @@ func createMockServer(t *testing.T) (
 	*driver.MockCSIDriver,
 	*driver.MockIdentityServer,
 	*driver.MockControllerServer,
-	*driver.MockNodeServer) {
+	*driver.MockNodeServer,
+	func()) {
 	// Start the mock server
 	mockController := gomock.NewController(t)
 	identityServer := driver.NewMockIdentityServer(mockController)
@@ -47,15 +51,28 @@ func createMockServer(t *testing.T) (
 		Controller: controllerServer,
 		Node:       nodeServer,
 	})
-	drv.Start()
 
-	return mockController, drv, identityServer, controllerServer, nodeServer
+	tmpDir, err := ioutil.TempDir("", "livenessprobe_test.*")
+	if err != nil {
+		t.Errorf("failed to create a temporary socket file name: %v", err)
+	}
+
+	csiEndpoint := fmt.Sprintf("%s/csi.sock", tmpDir)
+	err = drv.StartOnAddress("unix", csiEndpoint)
+	if err != nil {
+		t.Errorf("failed to start the csi driver at %s: %v", csiEndpoint, err)
+	}
+
+	return mockController, drv, identityServer, controllerServer, nodeServer, func() {
+		mockController.Finish()
+		drv.Stop()
+		os.RemoveAll(csiEndpoint)
+	}
 }
 
 func TestProbe(t *testing.T) {
-	mockController, driver, idServer, _, _ := createMockServer(t)
-	defer mockController.Finish()
-	defer driver.Stop()
+	_, driver, idServer, _, _, cleanUpFunc := createMockServer(t)
+	defer cleanUpFunc()
 
 	flag.Set("csi-address", driver.Address())
 	flag.Parse()
@@ -66,9 +83,7 @@ func TestProbe(t *testing.T) {
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
 
-	hp := &healthProbe{
-		driverName: driverName,
-	}
+	hp := &healthProbe{driverName: driverName}
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.URL.String() == "/healthz" {
@@ -77,12 +92,18 @@ func TestProbe(t *testing.T) {
 	}))
 	defer server.Close()
 
-	httpreq, err := http.NewRequest("GET", server.URL+"/healthz", nil)
+	httpreq, err := http.NewRequest("GET", fmt.Sprintf("%s/healthz", server.URL), nil)
 	if err != nil {
 		t.Fatalf("failed to build test request for health check: %v", err)
 	}
-	_, err = http.DefaultClient.Do(httpreq)
+
+	httpresp, err := http.DefaultClient.Do(httpreq)
 	if err != nil {
 		t.Errorf("failed to check probe: %v", err)
+	}
+
+	expectedStatusCode := http.StatusOK
+	if httpresp.StatusCode != expectedStatusCode {
+		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
 	}
 }
