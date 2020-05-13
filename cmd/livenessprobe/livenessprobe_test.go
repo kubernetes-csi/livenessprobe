@@ -107,3 +107,61 @@ func TestProbe(t *testing.T) {
 		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
 	}
 }
+
+func TestProbe_issue68(t *testing.T) {
+	_, driver, idServer, _, _, cleanUpFunc := createMockServer(t)
+	defer cleanUpFunc()
+
+	flag.Set("csi-address", driver.Address())
+	flag.Parse()
+
+	var injectedErr error
+
+	inProbe := &csi.ProbeRequest{}
+	outProbe := &csi.ProbeResponse{}
+	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
+
+	hp := &healthProbe{driverName: driverName}
+
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.String() == "/healthz" {
+			hp.checkProbe(rw, req)
+		}
+	}))
+	defer server.Close()
+
+	httpreq, err := http.NewRequest("GET", fmt.Sprintf("%s/healthz", server.URL), nil)
+	if err != nil {
+		t.Fatalf("failed to build test request for health check: %v", err)
+	}
+
+	httpresp, err := http.DefaultClient.Do(httpreq)
+	if err != nil {
+		t.Errorf("failed to check probe: %v", err)
+	}
+
+	expectedStatusCode := http.StatusOK
+	if httpresp.StatusCode != expectedStatusCode {
+		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
+	}
+
+	err = os.Remove(driver.Address())
+	if err != nil {
+		t.Errorf("failed to remove the csi driver socket file: %v", err)
+	}
+
+	httpreq, err = http.NewRequest("GET", fmt.Sprintf("%s/healthz", server.URL), nil)
+	if err != nil {
+		t.Fatalf("failed to build test request for health check: %v", err)
+	}
+
+	httpresp, err = http.DefaultClient.Do(httpreq)
+	if err != nil {
+		t.Errorf("failed to check probe: %v", err)
+	}
+
+	expectedStatusCode = http.StatusInternalServerError
+	if httpresp.StatusCode != expectedStatusCode {
+		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
+	}
+}
