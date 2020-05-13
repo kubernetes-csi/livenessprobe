@@ -21,6 +21,7 @@ import (
 	"flag"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"k8s.io/klog"
@@ -33,9 +34,10 @@ import (
 
 // Command line flags
 var (
-	probeTimeout = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
-	csiAddress   = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
-	healthzPort  = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
+	probeTimeout   = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
+	connectTimeout = flag.Duration("connect-timeout", 0, "Limit time to establish a connection to CSI driver")
+	csiAddress     = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	healthzPort    = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
 )
 
 type healthProbe struct {
@@ -46,7 +48,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	conn, err := acquireConnection()
+	conn, err := acquireConnection(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -76,12 +78,34 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	klog.V(5).Infof("Health check succeeded")
 }
 
-// acquireConnection wraps the connlib.Connect func.
-//
-// NOTE: always open a new connection to avoid the issue reported at
-// https://github.com/kubernetes-csi/livenessprobe/issues/68.
-func acquireConnection() (*grpc.ClientConn, error) {
-	return connlib.Connect(*csiAddress)
+// acquireConnection wraps the connlib.Connect but adding support to context
+// cancelation.
+func acquireConnection(ctx context.Context) (conn *grpc.ClientConn, err error) {
+	var m sync.Mutex
+	var canceled bool
+	ready := make(chan bool)
+	go func() {
+		conn, err = connlib.Connect(*csiAddress)
+
+		m.Lock()
+		defer m.Unlock()
+		if err != nil && canceled {
+			conn.Close()
+		}
+
+		close(ready)
+	}()
+
+	select {
+	case <-ctx.Done():
+		m.Lock()
+		defer m.Unlock()
+		canceled = true
+		return nil, ctx.Err()
+
+	case <-ready:
+		return conn, err
+	}
 }
 
 func main() {
@@ -89,7 +113,7 @@ func main() {
 	flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	csiConn, err := acquireConnection()
+	csiConn, err := acquireConnection(context.Background())
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
 		// the grpc client is misconfigured rather than an error on the network
