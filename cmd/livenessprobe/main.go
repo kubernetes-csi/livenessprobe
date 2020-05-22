@@ -24,12 +24,10 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog"
-
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
-
 	"google.golang.org/grpc"
+	"k8s.io/klog"
 )
 
 // Command line flags
