@@ -17,15 +17,17 @@ limitations under the License.
 package main
 
 import (
+	"flag"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
-	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
 	"github.com/kubernetes-csi/csi-test/driver"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -38,8 +40,7 @@ func createMockServer(t *testing.T) (
 	*driver.MockIdentityServer,
 	*driver.MockControllerServer,
 	*driver.MockNodeServer,
-	*grpc.ClientConn,
-	error) {
+	func()) {
 	// Start the mock server
 	mockController := gomock.NewController(t)
 	identityServer := driver.NewMockIdentityServer(mockController)
@@ -50,26 +51,31 @@ func createMockServer(t *testing.T) (
 		Controller: controllerServer,
 		Node:       nodeServer,
 	})
-	drv.Start()
 
-	// Create a client connection to it
-	addr := drv.Address()
-	csiConn, err := connlib.Connect(addr)
+	tmpDir, err := ioutil.TempDir("", "livenessprobe_test.*")
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, err
+		t.Errorf("failed to create a temporary socket file name: %v", err)
 	}
 
-	return mockController, drv, identityServer, controllerServer, nodeServer, csiConn, nil
+	csiEndpoint := fmt.Sprintf("%s/csi.sock", tmpDir)
+	err = drv.StartOnAddress("unix", csiEndpoint)
+	if err != nil {
+		t.Errorf("failed to start the csi driver at %s: %v", csiEndpoint, err)
+	}
+
+	return mockController, drv, identityServer, controllerServer, nodeServer, func() {
+		mockController.Finish()
+		drv.Stop()
+		os.RemoveAll(csiEndpoint)
+	}
 }
 
 func TestProbe(t *testing.T) {
-	mockController, driver, idServer, _, _, csiConn, err := createMockServer(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer mockController.Finish()
-	defer driver.Stop()
-	defer csiConn.Close()
+	_, driver, idServer, _, _, cleanUpFunc := createMockServer(t)
+	defer cleanUpFunc()
+
+	flag.Set("csi-address", driver.Address())
+	flag.Parse()
 
 	var injectedErr error
 
@@ -77,10 +83,7 @@ func TestProbe(t *testing.T) {
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
 
-	hp := &healthProbe{
-		conn:       csiConn,
-		driverName: driverName,
-	}
+	hp := &healthProbe{driverName: driverName}
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.URL.String() == "/healthz" {
@@ -89,12 +92,76 @@ func TestProbe(t *testing.T) {
 	}))
 	defer server.Close()
 
-	httpreq, err := http.NewRequest("GET", server.URL+"/healthz", nil)
+	httpreq, err := http.NewRequest("GET", fmt.Sprintf("%s/healthz", server.URL), nil)
 	if err != nil {
 		t.Fatalf("failed to build test request for health check: %v", err)
 	}
-	_, err = http.DefaultClient.Do(httpreq)
+
+	httpresp, err := http.DefaultClient.Do(httpreq)
 	if err != nil {
 		t.Errorf("failed to check probe: %v", err)
+	}
+
+	expectedStatusCode := http.StatusOK
+	if httpresp.StatusCode != expectedStatusCode {
+		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
+	}
+}
+
+func TestProbe_issue68(t *testing.T) {
+	_, driver, idServer, _, _, cleanUpFunc := createMockServer(t)
+	defer cleanUpFunc()
+
+	flag.Set("csi-address", driver.Address())
+	flag.Parse()
+
+	var injectedErr error
+
+	inProbe := &csi.ProbeRequest{}
+	outProbe := &csi.ProbeResponse{}
+	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
+
+	hp := &healthProbe{driverName: driverName}
+
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.String() == "/healthz" {
+			hp.checkProbe(rw, req)
+		}
+	}))
+	defer server.Close()
+
+	httpreq, err := http.NewRequest("GET", fmt.Sprintf("%s/healthz", server.URL), nil)
+	if err != nil {
+		t.Fatalf("failed to build test request for health check: %v", err)
+	}
+
+	httpresp, err := http.DefaultClient.Do(httpreq)
+	if err != nil {
+		t.Errorf("failed to check probe: %v", err)
+	}
+
+	expectedStatusCode := http.StatusOK
+	if httpresp.StatusCode != expectedStatusCode {
+		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
+	}
+
+	err = os.Remove(driver.Address())
+	if err != nil {
+		t.Errorf("failed to remove the csi driver socket file: %v", err)
+	}
+
+	httpreq, err = http.NewRequest("GET", fmt.Sprintf("%s/healthz", server.URL), nil)
+	if err != nil {
+		t.Fatalf("failed to build test request for health check: %v", err)
+	}
+
+	httpresp, err = http.DefaultClient.Do(httpreq)
+	if err != nil {
+		t.Errorf("failed to check probe: %v", err)
+	}
+
+	expectedStatusCode = http.StatusInternalServerError
+	if httpresp.StatusCode != expectedStatusCode {
+		t.Errorf("expected status code %d but got %d", expectedStatusCode, httpresp.StatusCode)
 	}
 }
