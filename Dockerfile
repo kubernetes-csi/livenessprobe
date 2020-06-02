@@ -15,6 +15,7 @@
 FROM gcr.io/distroless/static:latest
 LABEL maintainers="Kubernetes Authors"
 LABEL description="CSI Driver liveness probe"
+ARG binary=./bin/livenessprobe
 
-COPY ./bin/livenessprobe /livenessprobe
+COPY ${binary} /livenessprobe
 ENTRYPOINT ["/livenessprobe"]
