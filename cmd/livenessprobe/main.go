@@ -24,19 +24,21 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/klog"
+	"google.golang.org/grpc"
+	"k8s.io/klog/v2"
 
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
+	"github.com/kubernetes-csi/csi-lib-utils/metrics"
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
-
-	"google.golang.org/grpc"
 )
 
 // Command line flags
 var (
-	probeTimeout = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
-	csiAddress   = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
-	healthzPort  = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
+	probeTimeout   = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
+	csiAddress     = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	healthzPort    = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
+	metricsAddress = flag.String("metrics-address", "", "The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled.")
+	metricsPath    = flag.String("metrics-path", "/metrics", "The HTTP path where prometheus metrics will be exposed. Default is `/metrics`.")
 )
 
 type healthProbe struct {
@@ -47,7 +49,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	conn, err := acquireConnection(ctx)
+	conn, err := acquireConnection(ctx, metrics.NewCSIMetricsManager(""))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -79,12 +81,13 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 
 // acquireConnection wraps the connlib.Connect but adding support to context
 // cancelation.
-func acquireConnection(ctx context.Context) (conn *grpc.ClientConn, err error) {
+func acquireConnection(ctx context.Context, metricsManager metrics.CSIMetricsManager) (conn *grpc.ClientConn, err error) {
+
 	var m sync.Mutex
 	var canceled bool
 	ready := make(chan bool)
 	go func() {
-		conn, err = connlib.Connect(*csiAddress)
+		conn, err = connlib.Connect(*csiAddress, metricsManager)
 
 		m.Lock()
 		defer m.Unlock()
@@ -111,8 +114,8 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
-
-	csiConn, err := acquireConnection(context.Background())
+	metricsManager := metrics.NewCSIMetricsManager("")
+	csiConn, err := acquireConnection(context.Background(), metricsManager)
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
 		// the grpc client is misconfigured rather than an error on the network
@@ -130,6 +133,9 @@ func main() {
 	hp := &healthProbe{
 		driverName: csiDriverName,
 	}
+
+	metricsManager.SetDriverName(csiDriverName)
+	metricsManager.StartMetricsEndpoint(*metricsAddress, *metricsPath)
 
 	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
 	http.HandleFunc("/healthz", hp.checkProbe)
