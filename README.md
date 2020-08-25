@@ -75,7 +75,7 @@ spec:
 
 * `--probe-timeout <duration>`: Maximum duration of single `Probe()` call (default "1s").
 
-*	`--metrics-address <port>`: The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled.
+* `--metrics-address <port>`: The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled.
 
 * `--metrics-path <path>`: The HTTP path where prometheus metrics will be exposed. Default is `/metrics`."
 
