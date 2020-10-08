@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/distroless/static:latest
+FROM gcr.io/distroless/static:latest-amd64
 LABEL maintainers="Kubernetes Authors"
 LABEL description="CSI Driver liveness probe"
 ARG binary=./bin/livenessprobe
