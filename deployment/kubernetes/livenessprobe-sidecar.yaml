@@ -49,6 +49,6 @@
       name: socket-dir
     image: quay.io/k8scsi/livenessprobe:canary
     args:
-    - --v=5
+    - --v=4
     - --csi-address=/csi/csi.sock
 #
