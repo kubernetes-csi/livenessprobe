@@ -42,14 +42,15 @@ var (
 )
 
 type healthProbe struct {
-	driverName string
+	driverName     string
+	metricsManager metrics.CSIMetricsManager
 }
 
 func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	conn, err := acquireConnection(ctx, metrics.NewCSIMetricsManager(""))
+	conn, err := acquireConnection(ctx, h.metricsManager)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -114,7 +115,7 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
-	metricsManager := metrics.NewCSIMetricsManager("")
+	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
 	csiConn, err := acquireConnection(context.Background(), metricsManager)
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
@@ -131,16 +132,18 @@ func main() {
 	klog.Infof("CSI driver name: %q", csiDriverName)
 
 	hp := &healthProbe{
-		driverName: csiDriverName,
+		driverName:     csiDriverName,
+		metricsManager: metricsManager,
 	}
 
-	metricsManager.SetDriverName(csiDriverName)
-	metricsManager.StartMetricsEndpoint(*metricsAddress, *metricsPath)
-
+	mux := http.NewServeMux()
 	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
-	http.HandleFunc("/healthz", hp.checkProbe)
+	metricsManager.RegisterToServer(mux, *metricsPath)
+	metricsManager.SetDriverName(csiDriverName)
+
+	mux.HandleFunc("/healthz", hp.checkProbe)
 	klog.Infof("Serving requests to /healthz on: %s", addr)
-	err = http.ListenAndServe(addr, nil)
+	err = http.ListenAndServe(addr, mux)
 	if err != nil {
 		klog.Fatalf("failed to start http server with error: %v", err)
 	}

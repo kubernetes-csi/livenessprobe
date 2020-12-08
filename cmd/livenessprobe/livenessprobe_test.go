@@ -27,6 +27,7 @@ import (
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
+	"github.com/kubernetes-csi/csi-lib-utils/metrics"
 	"github.com/kubernetes-csi/csi-test/v4/driver"
 )
 
@@ -83,7 +84,11 @@ func TestProbe(t *testing.T) {
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
 
-	hp := &healthProbe{driverName: driverName}
+	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
+	hp := &healthProbe{
+		driverName:     driverName,
+		metricsManager: metricsManager,
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.URL.String() == "/healthz" {
@@ -121,7 +126,11 @@ func TestProbe_issue68(t *testing.T) {
 	outProbe := &csi.ProbeResponse{}
 	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
 
-	hp := &healthProbe{driverName: driverName}
+	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
+	hp := &healthProbe{
+		driverName:     driverName,
+		metricsManager: metricsManager,
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.URL.String() == "/healthz" {
