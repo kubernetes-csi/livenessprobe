@@ -19,7 +19,7 @@ package main
 import (
 	"context"
 	"flag"
-	"net"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -32,13 +32,16 @@ import (
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
 )
 
+const (
+	defaultHttpEndpoint = ":9808"
+)
+
 // Command line flags
 var (
-	probeTimeout   = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds")
-	csiAddress     = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
-	healthzPort    = flag.String("health-port", "9808", "TCP ports for listening healthz requests")
-	metricsAddress = flag.String("metrics-address", "", "The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled.")
-	metricsPath    = flag.String("metrics-path", "/metrics", "The HTTP path where prometheus metrics will be exposed. Default is `/metrics`.")
+	probeTimeout = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds.")
+	csiAddress   = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	httpEndpoint = flag.String("http-endpoint", defaultHttpEndpoint, fmt.Sprintf("The TCP network address where the HTTP server for diagnostics, including CSI driver health check and metrics, will listen (example: `:8080`). The default is `%s`.", defaultHttpEndpoint))
+	metricsPath  = flag.String("metrics-path", "/metrics", "The HTTP path where prometheus metrics will be exposed. Default is `/metrics`.")
 )
 
 type healthProbe struct {
@@ -115,6 +118,7 @@ func main() {
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "true")
 	flag.Parse()
+
 	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
 	csiConn, err := acquireConnection(context.Background(), metricsManager)
 	if err != nil {
@@ -137,13 +141,12 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	addr := net.JoinHostPort("0.0.0.0", *healthzPort)
 	metricsManager.RegisterToServer(mux, *metricsPath)
 	metricsManager.SetDriverName(csiDriverName)
 
 	mux.HandleFunc("/healthz", hp.checkProbe)
-	klog.Infof("Serving requests to /healthz on: %s", addr)
-	err = http.ListenAndServe(addr, mux)
+	klog.Infof("ServeMux listening at %q", *httpEndpoint)
+	err = http.ListenAndServe(*httpEndpoint, mux)
 	if err != nil {
 		klog.Fatalf("failed to start http server with error: %v", err)
 	}
