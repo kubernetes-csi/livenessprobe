@@ -81,6 +81,8 @@ spec:
 
 * All glog / klog arguments are supported, such as `-v <log level>` or `-alsologtostderr`.
 
+* `--logging-format`: Set the log format. Default is `text`.
+
 ## Community, discussion, contribution, and support
 
 Learn how to engage with the Kubernetes community on the [community page](http://kubernetes.io/community/).

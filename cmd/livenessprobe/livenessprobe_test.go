@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -29,6 +28,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-lib-utils/metrics"
 	"github.com/kubernetes-csi/csi-test/v4/driver"
+	"github.com/spf13/pflag"
 )
 
 const (
@@ -75,8 +75,8 @@ func TestProbe(t *testing.T) {
 	_, driver, idServer, _, _, cleanUpFunc := createMockServer(t)
 	defer cleanUpFunc()
 
-	flag.Set("csi-address", driver.Address())
-	flag.Parse()
+	pflag.Set("csi-address", driver.Address())
+	pflag.Parse()
 
 	var injectedErr error
 
@@ -117,8 +117,8 @@ func TestProbe_issue68(t *testing.T) {
 	_, driver, idServer, _, _, cleanUpFunc := createMockServer(t)
 	defer cleanUpFunc()
 
-	flag.Set("csi-address", driver.Address())
-	flag.Parse()
+	pflag.Set("csi-address", driver.Address())
+	pflag.Parse()
 
 	var injectedErr error
 

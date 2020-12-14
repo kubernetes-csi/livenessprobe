@@ -18,7 +18,7 @@ package main
 
 import (
 	"context"
-	"flag"
+	goflag "flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,7 +26,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
+	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
@@ -40,12 +42,12 @@ const (
 
 // Command line flags
 var (
-	probeTimeout   = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds.")
-	csiAddress     = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
-	healthzPort    = flag.String("health-port", defaultHealthzPort, fmt.Sprintf("(deprecated) TCP ports for listening healthz requests. The default is `%s`. If set, `--http-endpoint` cannot be set.", defaultHealthzPort))
-	metricsAddress = flag.String("metrics-address", "", "(deprecated) The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled. If set, `--http-endpoint` cannot be set, and the address cannot resolve to localhost + the port from `--health-port`.")
-	httpEndpoint   = flag.String("http-endpoint", "", "The TCP network address where the HTTP server for diagnostics, including CSI driver health check and metrics. The default is empty string, which means the server is disabled. If set, `--health-port` and `--metrics-address` cannot be explicitly set.")
-	metricsPath    = flag.String("metrics-path", "/metrics", "The HTTP path where prometheus metrics will be exposed. Default is `/metrics`.")
+	probeTimeout   = pflag.Duration("probe-timeout", time.Second, "Probe timeout in seconds.")
+	csiAddress     = pflag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
+	healthzPort    = pflag.String("health-port", defaultHealthzPort, fmt.Sprintf("(deprecated) TCP ports for listening healthz requests. The default is `%s`. If set, `--http-endpoint` cannot be set.", defaultHealthzPort))
+	metricsAddress = pflag.String("metrics-address", "", "(deprecated) The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled. If set, `--http-endpoint` cannot be set, and the address cannot resolve to localhost + the port from `--health-port`.")
+	httpEndpoint   = pflag.String("http-endpoint", "", "The TCP network address where the HTTP server for diagnostics, including CSI driver health check and metrics. The default is empty string, which means the server is disabled. If set, `--health-port` and `--metrics-address` cannot be explicitly set.")
+	metricsPath    = pflag.String("metrics-path", "/metrics", "The HTTP path where prometheus metrics will be exposed. Default is `/metrics`.")
 )
 
 type healthProbe struct {
@@ -119,9 +121,18 @@ func acquireConnection(ctx context.Context, metricsManager metrics.CSIMetricsMan
 }
 
 func main() {
-	klog.InitFlags(nil)
-	flag.Set("logtostderr", "true")
-	flag.Parse()
+	logs.InitLogs()
+	defer logs.FlushLogs()
+
+	logOptions := logs.NewOptions()
+	logOptions.AddFlags(pflag.CommandLine)
+
+	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+	pflag.Set("logtostderr", "true")
+	pflag.Parse()
+
+	// set log formatter type
+	logOptions.Apply()
 
 	if *healthzPort != defaultHealthzPort && *httpEndpoint != "" {
 		klog.Error("only one of `--health-port` and `--http-endpoint` can be explicitly set.")
