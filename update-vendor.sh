@@ -1,6 +1,6 @@
-#! /bin/bash -e
+#!/usr/bin/env bash
 
-# Copyright 2021 The Kubernetes Authors.
+# Copyright 2019 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is for testing csi-release-tools itself in Prow. All other
-# repos use prow.sh for that, but as csi-release-tools isn't a normal
-# repo with some Go code in it, it has a custom Prow test script.
-
-./verify-shellcheck.sh "$(pwd)"
-./verify-spelling.sh "$(pwd)"
-./verify-boilerplate.sh "$(pwd)"
+if [ -f Gopkg.toml ]; then
+    echo "Repo uses 'dep' for vendoring."
+    (set -x; dep ensure)
+elif [ -f go.mod ]; then
+    release-tools/verify-go-version.sh "go"
+    (set -x; env GO111MODULE=on go mod tidy && env GO111MODULE=on go mod vendor)
+fi

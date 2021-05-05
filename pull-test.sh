@@ -1,4 +1,4 @@
-#! /bin/bash -e
+#! /bin/sh
 
 # Copyright 2021 The Kubernetes Authors.
 #
@@ -14,10 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is for testing csi-release-tools itself in Prow. All other
-# repos use prow.sh for that, but as csi-release-tools isn't a normal
-# repo with some Go code in it, it has a custom Prow test script.
+# This script is called by pull Prow jobs for the csi-release-tools
+# repo to ensure that the changes in the PR work when imported into
+# some other repo.
 
-./verify-shellcheck.sh "$(pwd)"
-./verify-spelling.sh "$(pwd)"
-./verify-boilerplate.sh "$(pwd)"
+set -ex
+
+# It must be called inside the updated csi-release-tools repo.
+CSI_RELEASE_TOOLS_DIR="$(pwd)"
+
+# Update the other repo.
+cd "$PULL_TEST_REPO_DIR"
+git subtree pull --squash --prefix=release-tools "$CSI_RELEASE_TOOLS_DIR" master
+git log -n2
+
+# Now fall through to testing.
+exec ./.prow.sh
