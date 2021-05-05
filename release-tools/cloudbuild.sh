@@ -1,4 +1,4 @@
-#! /bin/bash -e
+#! /bin/bash
 
 # Copyright 2021 The Kubernetes Authors.
 #
@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is for testing csi-release-tools itself in Prow. All other
-# repos use prow.sh for that, but as csi-release-tools isn't a normal
-# repo with some Go code in it, it has a custom Prow test script.
+# shellcheck disable=SC1091
+. release-tools/prow.sh
 
-./verify-shellcheck.sh "$(pwd)"
-./verify-spelling.sh "$(pwd)"
-./verify-boilerplate.sh "$(pwd)"
+gcr_cloud_build
