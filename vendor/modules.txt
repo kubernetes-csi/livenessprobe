@@ -21,7 +21,7 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/ptypes/wrappers
-# github.com/kubernetes-csi/csi-lib-utils v0.9.1
+# github.com/kubernetes-csi/csi-lib-utils v0.10.0
 ## explicit
 github.com/kubernetes-csi/csi-lib-utils/connection
 github.com/kubernetes-csi/csi-lib-utils/metrics
@@ -151,7 +151,6 @@ google.golang.org/protobuf/types/known/wrapperspb
 k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/version
 # k8s.io/component-base v0.22.0
-## explicit
 k8s.io/component-base/metrics
 k8s.io/component-base/version
 # k8s.io/klog/v2 v2.9.0
