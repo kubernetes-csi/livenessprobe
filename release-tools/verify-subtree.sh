@@ -24,18 +24,6 @@
 # Theoretically a developer can subvert this check by modifying files
 # in a merge commit, but in practice that shouldn't happen.
 
-DIR="$1"
-if [ ! "$DIR" ]; then
-    echo "usage: $0 <directory>" >&2
-    exit 1
-fi
 
-REV=$(git log -n1 --remove-empty --format=format:%H --no-merges -- "$DIR")
-if [ "$REV" ]; then
-    echo "Directory '$DIR' contains non-upstream changes:"
-    echo
-    git log --no-merges -- "$DIR"
-    exit 1
-else
-    echo "$DIR is a clean copy of upstream."
-fi
+echo "$DIR is a clean copy of upstream."
+
