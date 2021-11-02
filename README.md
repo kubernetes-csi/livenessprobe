@@ -71,13 +71,15 @@ spec:
 
 #### Other recognized arguments
 
-* `--health-port <number>`: TCP ports for listening for HTTP requests (default "9808")
+* `--health-port <number>`: TCP ports for listening for healthz requests (default "9808")
 
 * `--probe-timeout <duration>`: Maximum duration of single `Probe()` call (default "1s").
 
 * `--metrics-address <port>`: The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled.
 
 * `--metrics-path <path>`: The HTTP path where prometheus metrics will be exposed. Default is `/metrics`."
+
+* `--http-endpoint <endpoint>`: The TCP network address where the HTTP server for diagnostics, including CSI driver health check and metrics. The default is empty string, which means the server is disabled.
 
 * All glog / klog arguments are supported, such as `-v <log level>` or `-alsologtostderr`.
 
