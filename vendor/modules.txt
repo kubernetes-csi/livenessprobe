@@ -7,9 +7,9 @@ github.com/cespare/xxhash/v2
 # github.com/container-storage-interface/spec v1.5.0
 ## explicit
 github.com/container-storage-interface/spec/lib/go/csi
-# github.com/go-logr/logr v0.4.0
+# github.com/go-logr/logr v1.2.0
 github.com/go-logr/logr
-# github.com/golang/mock v1.4.3
+# github.com/golang/mock v1.5.0
 ## explicit
 github.com/golang/mock/gomock
 # github.com/golang/protobuf v1.5.2
@@ -67,7 +67,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.38.0
+# google.golang.org/grpc v1.40.0
 ## explicit
 google.golang.org/grpc
 google.golang.org/grpc/attributes
@@ -153,6 +153,6 @@ k8s.io/apimachinery/pkg/version
 # k8s.io/component-base v0.22.0
 k8s.io/component-base/metrics
 k8s.io/component-base/version
-# k8s.io/klog/v2 v2.9.0
+# k8s.io/klog/v2 v2.30.0
 ## explicit
 k8s.io/klog/v2
