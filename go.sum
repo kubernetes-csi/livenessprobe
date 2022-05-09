@@ -230,8 +230,8 @@ github.com/kr/pretty v0.2.0/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfn
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
-github.com/kubernetes-csi/csi-lib-utils v0.10.0 h1:Aqm8X81eCzzfH/bvIEqSWtcbK9HF9NbFk4d+le1snVA=
-github.com/kubernetes-csi/csi-lib-utils v0.10.0/go.mod h1:BmGZZB16L18+9+Lgg9YWwBKfNEHIDdgGfAyuW6p2NV0=
+github.com/kubernetes-csi/csi-lib-utils v0.11.0 h1:FHWOBtAZBA/hVk7v/qaXgG9Sxv0/n06DebPFuDwumqg=
+github.com/kubernetes-csi/csi-lib-utils v0.11.0/go.mod h1:BmGZZB16L18+9+Lgg9YWwBKfNEHIDdgGfAyuW6p2NV0=
 github.com/kubernetes-csi/csi-test/v4 v4.0.0-20200806214950-555d70a11a8b h1:wp9DgTXgP3O8AMTFvALTIu7jId4ixbpdvMUWnNWTL/E=
 github.com/kubernetes-csi/csi-test/v4 v4.0.0-20200806214950-555d70a11a8b/go.mod h1:TGjuI4eOTKSO6V9mWQUePglXFGG5g3calYcF3vhJ4BA=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
@@ -666,10 +666,12 @@ k8s.io/component-base v0.22.0/go.mod h1:SXj6Z+V6P6GsBhHZVbWCw9hFjUdUYnJerlhhPnYC
 k8s.io/gengo v0.0.0-20200413195148-3a45101e95ac/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/klog/v2 v2.0.0/go.mod h1:PBfzABfn139FHAV07az/IF9Wp1bkk3vpT2XSJ76fSDE=
 k8s.io/klog/v2 v2.9.0/go.mod h1:hy9LJ/NvuK+iVyP4Ehqva4HxZG/oXyIS3n3Jmire4Ec=
-k8s.io/klog/v2 v2.30.0 h1:bUO6drIvCIsvZ/XFgfxoGFQU/a4Qkh0iAlvUR7vlHJw=
-k8s.io/klog/v2 v2.30.0/go.mod h1:y1WjHnz7Dj687irZUWR/WLkLc5N1YHtjLdmgWjndZn0=
+k8s.io/klog/v2 v2.60.0 h1:gpzK92+m2MpVQKeRAUO+GURys568jE2RzMlIKEQeA9Q=
+k8s.io/klog/v2 v2.60.0/go.mod h1:N3kgBtsFxMb4nQ0eBDgbHEt/dtxBuTkSFQ+7K5OUoz4=
 k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e/go.mod h1:vHXdDvt9+2spS2Rx9ql3I8tycm3H9FDfdUoIuKCefvw=
 k8s.io/utils v0.0.0-20210707171843-4b05e18ac7d9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
+k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 h1:HNSDgDCrr/6Ly3WEGKZftiE7IY19Vz2GdbOCyI4qqhc=
+k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
