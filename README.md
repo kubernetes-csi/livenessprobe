@@ -13,7 +13,7 @@ This information reflects the head of this branch.
 
 | Compatible with CSI Version                                                                | Container Image                      | [Min K8s Version](https://kubernetes-csi.github.io/docs/kubernetes-compatibility.html#minimum-version) |
 | ------------------------------------------------------------------------------------------ | -------------------------------------| --------------- |
-| [CSI Spec v1.0.0](https://github.com/container-storage-interface/spec/releases/tag/v1.0.0) | k8s.gcr.io/sig-storage/livenessprobe | 1.13            |
+| [CSI Spec v1.0.0](https://github.com/container-storage-interface/spec/releases/tag/v1.0.0) | registry.k8s.io/sig-storage/livenessprobe | 1.13            |
 
 
 ## Usage
@@ -50,17 +50,17 @@ spec:
     volumeMounts:
     - mountPath: /csi
       name: socket-dir
-    # ...
- # The liveness probe sidecar container
- - name: liveness-probe
-    imagePullPolicy: Always
-    image: quay.io/k8scsi/livenessprobe:v1.1.0
-    args:
-    - --csi-address=/csi/csi.sock
-    volumeMounts:
-    - mountPath: /csi
-      name: socket-dir
-    # ...
+  # ...
+  # The liveness probe sidecar container
+  - name: liveness-probe
+     imagePullPolicy: Always
+     image: registry.k8s.io/sig-storage/livenessprobe:v2.7.0
+     args:
+     - --csi-address=/csi/csi.sock
+     volumeMounts:
+     - mountPath: /csi
+       name: socket-dir
+     # ...
 ```
 
 ### Command line options
