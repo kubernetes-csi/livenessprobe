@@ -53,14 +53,14 @@ spec:
   # ...
   # The liveness probe sidecar container
   - name: liveness-probe
-     imagePullPolicy: Always
-     image: registry.k8s.io/sig-storage/livenessprobe:v2.7.0
-     args:
-     - --csi-address=/csi/csi.sock
-     volumeMounts:
-     - mountPath: /csi
-       name: socket-dir
-     # ...
+    imagePullPolicy: Always
+    image: registry.k8s.io/sig-storage/livenessprobe:v2.7.0
+    args:
+    - --csi-address=/csi/csi.sock
+    volumeMounts:
+    - mountPath: /csi
+      name: socket-dir
+    # ...
 ```
 
 ### Command line options
