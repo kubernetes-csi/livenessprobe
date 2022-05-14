@@ -11,3 +11,5 @@ require (
 	google.golang.org/grpc v1.40.0
 	k8s.io/klog/v2 v2.60.0
 )
+
+replace golang.org/x/text => golang.org/x/text v0.3.7
