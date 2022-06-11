@@ -20,6 +20,7 @@ _Nothing has changed._
 - github.com/prometheus/client_golang: [v1.11.0 → v1.11.1](https://github.com/prometheus/client_golang/compare/v1.11.0...v1.11.1)
 - k8s.io/klog/v2: v2.30.0 → v2.60.0
 - k8s.io/utils: 4b05e18 → 3a6ce19
+- Built with Go 1.18
 
 ### Removed
 _Nothing has changed._
