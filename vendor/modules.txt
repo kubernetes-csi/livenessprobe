@@ -8,9 +8,8 @@ github.com/cespare/xxhash/v2
 ## explicit
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/go-logr/logr v1.2.3
-## explicit
 github.com/go-logr/logr
-# github.com/golang/mock v1.5.0
+# github.com/golang/mock v1.6.0
 ## explicit
 github.com/golang/mock/gomock
 # github.com/golang/protobuf v1.5.2
@@ -29,10 +28,10 @@ github.com/kubernetes-csi/csi-lib-utils/connection
 github.com/kubernetes-csi/csi-lib-utils/metrics
 github.com/kubernetes-csi/csi-lib-utils/protosanitizer
 github.com/kubernetes-csi/csi-lib-utils/rpc
-# github.com/kubernetes-csi/csi-test/v4 v4.0.0-20200806214950-555d70a11a8b
+# github.com/kubernetes-csi/csi-test/v5 v5.0.0
 ## explicit
-github.com/kubernetes-csi/csi-test/v4/driver
-github.com/kubernetes-csi/csi-test/v4/utils
+github.com/kubernetes-csi/csi-test/v5/driver
+github.com/kubernetes-csi/csi-test/v5/utils
 # github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/prometheus/client_golang v1.12.2
@@ -54,14 +53,15 @@ github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+# golang.org/x/net v0.0.0-20220921203646-d300de134e69
+## explicit
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+# golang.org/x/sys v0.0.0-20220731174439-a90be440212d
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -160,12 +160,13 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
-# k8s.io/apimachinery v0.24.3
+# k8s.io/apimachinery v0.25.2
 k8s.io/apimachinery/pkg/util/sets
 k8s.io/apimachinery/pkg/version
-# k8s.io/component-base v0.24.3
+# k8s.io/component-base v0.25.2
 ## explicit
 k8s.io/component-base/metrics
+k8s.io/component-base/metrics/prometheusextension
 k8s.io/component-base/version
 # k8s.io/klog/v2 v2.70.1
 ## explicit
