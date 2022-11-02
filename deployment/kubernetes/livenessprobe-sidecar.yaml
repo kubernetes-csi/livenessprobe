@@ -50,4 +50,5 @@
     args:
     - --v=4
     - --csi-address=/csi/csi.sock
+    - --log-format-json=true
 #

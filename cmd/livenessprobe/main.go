@@ -32,6 +32,8 @@ import (
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
 	"github.com/kubernetes-csi/csi-lib-utils/metrics"
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
+	logsapi "k8s.io/component-base/logs/api/v1"
+	json "k8s.io/component-base/logs/json"
 )
 
 const (
@@ -46,6 +48,7 @@ var (
 	metricsAddress = flag.String("metrics-address", "", "(deprecated) The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled. If set, `--http-endpoint` cannot be set, and the address cannot resolve to localhost + the port from `--health-port`.")
 	httpEndpoint   = flag.String("http-endpoint", "", "The TCP network address where the HTTP server for diagnostics, including CSI driver health check and metrics. The default is empty string, which means the server is disabled. If set, `--health-port` and `--metrics-address` cannot be explicitly set.")
 	metricsPath    = flag.String("metrics-path", "/metrics", "The HTTP path where prometheus metrics will be exposed. Default is `/metrics`.")
+	logFormatJSON  = flag.Bool("log-format-json", false, "set log formatter to json")
 )
 
 type healthProbe struct {
@@ -130,6 +133,11 @@ func main() {
 	if *metricsAddress != "" && *httpEndpoint != "" {
 		klog.Error("only one of `--metrics-address` and `--http-endpoint` can be explicitly set.")
 		os.Exit(1)
+	}
+	if *logFormatJSON {
+		jsonFactory := json.Factory{}
+		logger, _ := jsonFactory.Create(logsapi.LoggingConfiguration{Format: "json"})
+		klog.InfoS("logging livenessprobe",logger)
 	}
 	var addr string
 	if *httpEndpoint != "" {
