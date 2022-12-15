@@ -31,3 +31,5 @@ require (
 	k8s.io/apimachinery v0.26.0 // indirect
 	k8s.io/component-base v0.26.0 // indirect
 )
+
+replace golang.org/x/net => golang.org/x/net v0.4.0
