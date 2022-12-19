@@ -1,6 +1,6 @@
 module github.com/kubernetes-csi/livenessprobe
 
-go 1.18
+go 1.19
 
 require (
 	github.com/container-storage-interface/spec v1.6.0
@@ -32,11 +32,13 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	golang.org/x/net v0.1.1-0.20221027164007-c63010009c80 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/net v0.3.1-0.20221206200815-1e63c2f08a10 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20220804142021-4e6b2dfa6612 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	k8s.io/apimachinery v0.26.0-rc.0 // indirect
-	k8s.io/component-base v0.26.0-rc.0 // indirect
+	k8s.io/apimachinery v0.26.0 // indirect
+	k8s.io/component-base v0.26.0 // indirect
 )
+
+replace golang.org/x/net => golang.org/x/net v0.4.0
