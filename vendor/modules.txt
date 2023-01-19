@@ -7,8 +7,8 @@ github.com/blang/semver/v4
 # github.com/cespare/xxhash/v2 v2.1.2
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/container-storage-interface/spec v1.6.0
-## explicit; go 1.16
+# github.com/container-storage-interface/spec v1.7.0
+## explicit; go 1.18
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/go-logr/logr v1.2.3
 ## explicit; go 1.16
@@ -36,8 +36,8 @@ github.com/golang/protobuf/ptypes/wrappers
 # github.com/inconshreveable/mousetrap v1.0.0
 ## explicit
 github.com/inconshreveable/mousetrap
-# github.com/kubernetes-csi/csi-lib-utils v0.11.0
-## explicit; go 1.16
+# github.com/kubernetes-csi/csi-lib-utils v0.12.0
+## explicit; go 1.18
 github.com/kubernetes-csi/csi-lib-utils/connection
 github.com/kubernetes-csi/csi-lib-utils/metrics
 github.com/kubernetes-csi/csi-lib-utils/protosanitizer
@@ -87,7 +87,7 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/net v0.3.1-0.20221206200815-1e63c2f08a10 => golang.org/x/net v0.4.0
+# golang.org/x/net v0.4.0 => golang.org/x/net v0.4.0
 ## explicit; go 1.17
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
