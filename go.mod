@@ -1,6 +1,6 @@
 module github.com/kubernetes-csi/livenessprobe
 
-go 1.19
+go 1.20
 
 require (
 	github.com/container-storage-interface/spec v1.7.0
@@ -28,6 +28,6 @@ require (
 	golang.org/x/text v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20220804142021-4e6b2dfa6612 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	k8s.io/apimachinery v0.27.0-rc.0 // indirect
-	k8s.io/component-base v0.27.0-rc.0 // indirect
+	k8s.io/apimachinery v0.27.0 // indirect
+	k8s.io/component-base v0.27.0 // indirect
 )
