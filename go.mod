@@ -8,7 +8,7 @@ require (
 	github.com/kubernetes-csi/csi-lib-utils v0.13.0
 	github.com/kubernetes-csi/csi-test/v5 v5.0.0
 	google.golang.org/grpc v1.55.0
-	k8s.io/klog/v2 v2.90.1
+	k8s.io/klog/v2 v2.100.1
 )
 
 require (
