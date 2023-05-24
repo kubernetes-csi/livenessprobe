@@ -99,7 +99,7 @@ func acquireConnection(ctx context.Context, metricsManager metrics.CSIMetricsMan
 
 		m.Lock()
 		defer m.Unlock()
-		if err != nil && canceled {
+		if err != nil && canceled && conn != nil {
 			conn.Close()
 		}
 
