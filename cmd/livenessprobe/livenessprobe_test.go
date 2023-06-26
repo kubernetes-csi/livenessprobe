@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -53,13 +52,10 @@ func createMockServer(t *testing.T) (
 		Node:       nodeServer,
 	})
 
-	tmpDir, err := ioutil.TempDir("", "livenessprobe_test.*")
-	if err != nil {
-		t.Errorf("failed to create a temporary socket file name: %v", err)
-	}
+	tmpDir := t.TempDir()
 
 	csiEndpoint := fmt.Sprintf("%s/csi.sock", tmpDir)
-	err = drv.StartOnAddress("unix", csiEndpoint)
+	err := drv.StartOnAddress("unix", csiEndpoint)
 	if err != nil {
 		t.Errorf("failed to start the csi driver at %s: %v", csiEndpoint, err)
 	}
