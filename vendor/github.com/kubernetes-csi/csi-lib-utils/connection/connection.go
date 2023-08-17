@@ -193,7 +193,7 @@ func LogGRPC(ctx context.Context, method string, req, reply interface{}, cc *grp
 	klog.V(5).Infof("GRPC call: %s", method)
 	klog.V(5).Infof("GRPC request: %s", protosanitizer.StripSecrets(req))
 	err := invoker(ctx, method, req, reply, cc, opts...)
-	cappedStr := protosanitizer.StripSecrets(reply).String()
+	cappedStr := fmt.Sprintf("%s", protosanitizer.StripSecrets(reply))
 	if maxLogChar > 0 && len(cappedStr) > maxLogChar {
 		cappedStr = cappedStr[:maxLogChar] + fmt.Sprintf(" [response body too large, log capped to %d chars]", maxLogChar)
 	}
