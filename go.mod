@@ -7,7 +7,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/kubernetes-csi/csi-lib-utils v0.15.0
 	github.com/kubernetes-csi/csi-test/v5 v5.1.0
-	google.golang.org/grpc v1.58.0
+	google.golang.org/grpc v1.58.1
 	k8s.io/component-base v0.28.0
 	k8s.io/klog/v2 v2.100.1
 )
