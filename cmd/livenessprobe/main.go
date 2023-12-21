@@ -23,10 +23,8 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
-	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 
 	"k8s.io/component-base/featuregate"
@@ -62,7 +60,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	conn, err := acquireConnection(ctx, h.metricsManager)
+	conn, err := connlib.Connect(*csiAddress, h.metricsManager, connlib.WithTimeout(*probeTimeout))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -90,37 +88,6 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`ok`))
 	klog.V(5).InfoS("Health check succeeded")
-}
-
-// acquireConnection wraps the connlib.Connect but adding support to context
-// cancelation.
-func acquireConnection(ctx context.Context, metricsManager metrics.CSIMetricsManager) (conn *grpc.ClientConn, err error) {
-
-	var m sync.Mutex
-	var canceled bool
-	ready := make(chan bool)
-	go func() {
-		conn, err = connlib.Connect(*csiAddress, metricsManager)
-
-		m.Lock()
-		defer m.Unlock()
-		if err != nil && canceled && conn != nil {
-			conn.Close()
-		}
-
-		close(ready)
-	}()
-
-	select {
-	case <-ctx.Done():
-		m.Lock()
-		defer m.Unlock()
-		canceled = true
-		return nil, ctx.Err()
-
-	case <-ready:
-		return conn, err
-	}
 }
 
 func main() {
@@ -151,10 +118,13 @@ func main() {
 	}
 
 	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
-	csiConn, err := acquireConnection(context.Background(), metricsManager)
+	csiConn, err := connlib.Connect(*csiAddress, metricsManager, connlib.WithTimeout(5*time.Minute))
 	if err != nil {
-		// connlib should retry forever so a returned error should mean
-		// the grpc client is misconfigured rather than an error on the network
+		// It is not possible to configure connlib to never timeout while acquiring a connection.
+		// If we allow it to timeout too quickly, livenessprobe may enter a crash loop and it may
+		// become impossible for a liveness probe on the CSI plugin to ever succeed. Set a five
+		// minute timeout (the maximum exponential backoff time) so livenessprobe at least waits
+		// long enough for a crashing CSI plugin to restart.
 		klog.ErrorS(err, "Failed to establish connection to CSI driver")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
