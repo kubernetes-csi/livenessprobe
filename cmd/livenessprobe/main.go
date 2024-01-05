@@ -23,10 +23,8 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
-	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 
 	"k8s.io/component-base/featuregate"
@@ -62,7 +60,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	conn, err := acquireConnection(ctx, h.metricsManager)
+	conn, err := connlib.Connect(*csiAddress, h.metricsManager, connlib.WithTimeout(*probeTimeout))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -90,37 +88,6 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`ok`))
 	klog.V(5).InfoS("Health check succeeded")
-}
-
-// acquireConnection wraps the connlib.Connect but adding support to context
-// cancelation.
-func acquireConnection(ctx context.Context, metricsManager metrics.CSIMetricsManager) (conn *grpc.ClientConn, err error) {
-
-	var m sync.Mutex
-	var canceled bool
-	ready := make(chan bool)
-	go func() {
-		conn, err = connlib.Connect(*csiAddress, metricsManager)
-
-		m.Lock()
-		defer m.Unlock()
-		if err != nil && canceled && conn != nil {
-			conn.Close()
-		}
-
-		close(ready)
-	}()
-
-	select {
-	case <-ctx.Done():
-		m.Lock()
-		defer m.Unlock()
-		canceled = true
-		return nil, ctx.Err()
-
-	case <-ready:
-		return conn, err
-	}
 }
 
 func main() {
@@ -151,10 +118,14 @@ func main() {
 	}
 
 	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
-	csiConn, err := acquireConnection(context.Background(), metricsManager)
+	// Connect to the CSI driver without any timeout to avoid crashing the probe when the driver is not ready yet.
+	// Goal: liveness probe never crashes, it only fails the probe when the driver is not available (yet).
+	// Since a http server for the probe is not running at this point, Kubernetes liveness probe will fail immediately
+	// with "connection refused", which is good enough to fail the probe.
+	csiConn, err := connlib.Connect(*csiAddress, metricsManager, connlib.WithTimeout(0))
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
-		// the grpc client is misconfigured rather than an error on the network
+		// the grpc client is misconfigured rather than an error on the network or CSI driver.
 		klog.ErrorS(err, "Failed to establish connection to CSI driver")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
@@ -163,6 +134,7 @@ func main() {
 	csiDriverName, err := rpc.GetDriverName(context.Background(), csiConn)
 	csiConn.Close()
 	if err != nil {
+		// The CSI driver does not support GetDriverName, which is serious enough to crash the probe.
 		klog.ErrorS(err, "Failed to get CSI driver name")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
