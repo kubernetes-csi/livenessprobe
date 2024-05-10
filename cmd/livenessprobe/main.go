@@ -60,7 +60,7 @@ func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
 	defer cancel()
 
-	conn, err := connlib.Connect(*csiAddress, h.metricsManager, connlib.WithTimeout(*probeTimeout))
+	conn, err := connlib.Connect(ctx, *csiAddress, h.metricsManager, connlib.WithTimeout(*probeTimeout))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -122,7 +122,8 @@ func main() {
 	// Goal: liveness probe never crashes, it only fails the probe when the driver is not available (yet).
 	// Since a http server for the probe is not running at this point, Kubernetes liveness probe will fail immediately
 	// with "connection refused", which is good enough to fail the probe.
-	csiConn, err := connlib.Connect(*csiAddress, metricsManager, connlib.WithTimeout(0))
+	ctx := context.Background()
+	csiConn, err := connlib.Connect(ctx, *csiAddress, metricsManager, connlib.WithTimeout(0))
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
 		// the grpc client is misconfigured rather than an error on the network or CSI driver.
