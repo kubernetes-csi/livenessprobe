@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"k8s.io/klog/v2"
@@ -58,36 +57,37 @@ type healthProbe struct {
 
 func (h *healthProbe) checkProbe(w http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(req.Context(), *probeTimeout)
+	logger := klog.FromContext(ctx)
 	defer cancel()
 
 	conn, err := connlib.Connect(ctx, *csiAddress, h.metricsManager, connlib.WithTimeout(*probeTimeout))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		klog.ErrorS(err, "Failed to establish connection to CSI driver")
+		logger.Error(err, "Failed to establish connection to CSI driver")
 		return
 	}
 	defer conn.Close()
 
-	klog.V(5).InfoS("Sending probe request to CSI driver", "driver", h.driverName)
+	logger.V(5).Info("Sending probe request to CSI driver", "driver", h.driverName)
 	ready, err := rpc.Probe(ctx, conn)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		klog.ErrorS(err, "Health check failed")
+		logger.Error(err, "Health check failed")
 		return
 	}
 
 	if !ready {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("driver responded but is not ready"))
-		klog.ErrorS(nil, "Driver responded but is not ready")
+		logger.Error(nil, "Driver responded but is not ready")
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`ok`))
-	klog.V(5).InfoS("Health check succeeded")
+	logger.V(5).Info("Health check succeeded")
 }
 
 func main() {
@@ -97,18 +97,19 @@ func main() {
 	logsapi.AddGoFlags(c, flag.CommandLine)
 	logs.InitLogs()
 	flag.Parse()
+	logger := klog.Background()
 	if err := logsapi.ValidateAndApply(c, fg); err != nil {
-		klog.ErrorS(err, "LoggingConfiguration is invalid")
-		os.Exit(1)
+		logger.Error(err, "LoggingConfiguration is invalid")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
 
 	if *healthzPort != defaultHealthzPort && *httpEndpoint != "" {
-		klog.ErrorS(nil, "Only one of `--health-port` and `--http-endpoint` can be explicitly set")
-		os.Exit(1)
+		logger.Error(nil, "Only one of `--health-port` and `--http-endpoint` can be explicitly set")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
 	if *metricsAddress != "" && *httpEndpoint != "" {
-		klog.ErrorS(nil, "Only one of `--metrics-address` and `--http-endpoint` can be explicitly set")
-		os.Exit(1)
+		logger.Error(nil, "Only one of `--metrics-address` and `--http-endpoint` can be explicitly set")
+		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
 	var addr string
 	if *httpEndpoint != "" {
@@ -127,19 +128,19 @@ func main() {
 	if err != nil {
 		// connlib should retry forever so a returned error should mean
 		// the grpc client is misconfigured rather than an error on the network or CSI driver.
-		klog.ErrorS(err, "Failed to establish connection to CSI driver")
+		logger.Error(err, "Failed to establish connection to CSI driver")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
 
-	klog.InfoS("Calling CSI driver to discover driver name")
+	logger.Info("Calling CSI driver to discover driver name")
 	csiDriverName, err := rpc.GetDriverName(context.Background(), csiConn)
 	csiConn.Close()
 	if err != nil {
 		// The CSI driver does not support GetDriverName, which is serious enough to crash the probe.
-		klog.ErrorS(err, "Failed to get CSI driver name")
+		logger.Error(err, "Failed to get CSI driver name")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 	}
-	klog.InfoS("CSI driver name", "driver", csiDriverName)
+	logger.Info("CSI driver name", "driver", csiDriverName)
 
 	hp := &healthProbe{
 		driverName:     csiDriverName,
@@ -158,19 +159,19 @@ func main() {
 		metricsMux := http.NewServeMux()
 		metricsManager.RegisterToServer(metricsMux, *metricsPath)
 		go func() {
-			klog.InfoS("Separate metrics ServeMux listening", "address", *metricsAddress)
+			logger.Info("Separate metrics ServeMux listening", "address", *metricsAddress)
 			err := http.ListenAndServe(*metricsAddress, metricsMux)
 			if err != nil {
-				klog.ErrorS(err, "Failed to start prometheus metrics endpoint on specified address and path", "addr", *metricsAddress, "path", *metricsPath)
+				logger.Error(err, "Failed to start prometheus metrics endpoint on specified address and path", "addr", *metricsAddress, "path", *metricsPath)
 				klog.FlushAndExit(klog.ExitFlushTimeout, 1)
 			}
 		}()
 	}
 
 	mux.HandleFunc("/healthz", hp.checkProbe)
-	klog.InfoS("ServeMux listening", "address", addr)
+	logger.Info("ServeMux listening", "address", addr)
 	err = http.ListenAndServe(addr, mux)
 	if err != nil {
-		klog.ErrorS(err, "Failed to start http server")
+		logger.Error(err, "Failed to start http server")
 	}
 }
