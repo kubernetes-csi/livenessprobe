@@ -1,3 +1,13 @@
+# Release notes for v2.13.1
+
+[Documentation](https://kubernetes-csi.github.io)
+
+## Changes by Kind
+
+### Bug or Regression
+
+- Rebuilt with fixed Windows base images, which fixes [#273](https://github.com/kubernetes-csi/livenessprobe/issues/273).
+
 # Release notes for v2.13.0
 
 [Documentation](https://kubernetes-csi.github.io/docs/)
