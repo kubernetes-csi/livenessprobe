@@ -3,10 +3,10 @@ module github.com/kubernetes-csi/livenessprobe
 go 1.22.5
 
 require (
-	github.com/container-storage-interface/spec v1.9.0
+	github.com/container-storage-interface/spec v1.10.0
 	github.com/golang/mock v1.6.0
 	github.com/kubernetes-csi/csi-lib-utils v0.19.0
-	github.com/kubernetes-csi/csi-test/v5 v5.2.0
+	github.com/kubernetes-csi/csi-test/v5 v5.3.1
 	k8s.io/component-base v0.31.0
 	k8s.io/klog/v2 v2.130.1
 )

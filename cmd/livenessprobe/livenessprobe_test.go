@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	csitestutil "github.com/kubernetes-csi/csi-test/v5/utils"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -78,7 +79,7 @@ func TestProbe(t *testing.T) {
 
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
-	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
+	idServer.EXPECT().Probe(gomock.Any(), csitestutil.Protobuf(inProbe)).Return(outProbe, injectedErr).Times(1)
 
 	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
 	hp := &healthProbe{
@@ -120,7 +121,7 @@ func TestProbe_issue68(t *testing.T) {
 
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
-	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
+	idServer.EXPECT().Probe(gomock.Any(), csitestutil.Protobuf(inProbe)).Return(outProbe, injectedErr).Times(1)
 
 	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
 	hp := &healthProbe{
