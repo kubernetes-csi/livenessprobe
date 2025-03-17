@@ -2,6 +2,8 @@ module github.com/kubernetes-csi/livenessprobe
 
 go 1.23.1
 
+toolchain go1.24.1
+
 require (
 	github.com/container-storage-interface/spec v1.11.0
 	github.com/golang/mock v1.6.0
@@ -30,7 +32,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_golang v1.21.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.62.0 // indirect
+	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
