@@ -81,6 +81,8 @@ spec:
 
 * `--http-endpoint <endpoint>`: The TCP network address where the HTTP server for diagnostics, including CSI driver health check and metrics. The default is empty string, which means the server is disabled.
 
+* `--automaxprocs`: Automatically set the `GOMAXPROCS` environment variable to match the configured Linux container CPU quota. Defaults to false.
+
 * [Arguments set by the `k8s.io/component-base/logs` package for klog](https://github.com/kubernetes/component-base/blob/v0.28.0-rc.0/logs/api/v1/options.go#L337-L355) are supported, such as `--v <log level>` and `--logging-format <log format>`.
 
 ## Community, discussion, contribution, and support

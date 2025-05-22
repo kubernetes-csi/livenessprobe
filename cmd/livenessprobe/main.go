@@ -34,6 +34,7 @@ import (
 	connlib "github.com/kubernetes-csi/csi-lib-utils/connection"
 	"github.com/kubernetes-csi/csi-lib-utils/metrics"
 	"github.com/kubernetes-csi/csi-lib-utils/rpc"
+	"github.com/kubernetes-csi/csi-lib-utils/standardflags"
 )
 
 const (
@@ -96,8 +97,9 @@ func main() {
 	c := logsapi.NewLoggingConfiguration()
 	logsapi.AddGoFlags(c, flag.CommandLine)
 	logs.InitLogs()
-	flag.Parse()
 	logger := klog.Background()
+	standardflags.AddAutomaxprocs(logger.Info)
+	flag.Parse()
 	if err := logsapi.ValidateAndApply(c, fg); err != nil {
 		logger.Error(err, "LoggingConfiguration is invalid")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)
