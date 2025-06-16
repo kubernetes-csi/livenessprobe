@@ -73,7 +73,7 @@ spec:
 
 * `--health-port <number>`: TCP ports for listening for healthz requests (default "9808")
 
-* `--probe-timeout <duration>`: Maximum duration of single `Probe()` call (default "1s").
+* `--probe-timeout <duration>`: Maximum duration of single `Probe()` call (default "3s").
 
 * `--metrics-address <port>`: The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled.
 
