@@ -7,8 +7,8 @@ github.com/blang/semver/v4
 # github.com/cespare/xxhash/v2 v2.3.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/container-storage-interface/spec v1.11.0
-## explicit; go 1.18
+# github.com/container-storage-interface/spec v1.12.0
+## explicit; go 1.23.0
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 ## explicit
@@ -55,8 +55,8 @@ github.com/kubernetes-csi/csi-lib-utils/metrics
 github.com/kubernetes-csi/csi-lib-utils/protosanitizer
 github.com/kubernetes-csi/csi-lib-utils/rpc
 github.com/kubernetes-csi/csi-lib-utils/standardflags
-# github.com/kubernetes-csi/csi-test/v5 v5.3.1
-## explicit; go 1.18
+# github.com/kubernetes-csi/csi-test/v5 v5.4.0
+## explicit; go 1.23.0
 github.com/kubernetes-csi/csi-test/v5/driver
 github.com/kubernetes-csi/csi-test/v5/utils
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
