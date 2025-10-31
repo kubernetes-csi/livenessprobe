@@ -43,7 +43,7 @@ const (
 
 // Command line flags
 var (
-	probeTimeout   = flag.Duration("probe-timeout", time.Second, "Probe timeout in seconds.")
+	probeTimeout   = flag.Duration("probe-timeout", 3*time.Second, "Probe timeout in seconds.")
 	csiAddress     = flag.String("csi-address", "/run/csi/socket", "Address of the CSI driver socket.")
 	healthzPort    = flag.String("health-port", defaultHealthzPort, fmt.Sprintf("(deprecated) TCP ports for listening healthz requests. The default is `%s`. If set, `--http-endpoint` cannot be set.", defaultHealthzPort))
 	metricsAddress = flag.String("metrics-address", "", "(deprecated) The TCP network address where the prometheus metrics endpoint will listen (example: `:8080`). The default is empty string, which means metrics endpoint is disabled. If set, `--http-endpoint` cannot be set, and the address cannot resolve to localhost + the port from `--health-port`.")
