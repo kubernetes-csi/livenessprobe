@@ -1,29 +1,39 @@
-name: Run Trivy scanner for Go version vulnerabilities
+name: Trivy vulnerability scanner
 on:
   push:
     branches:
       - master
   pull_request:
 jobs:
-  trivy:
+  build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Get Go version
-        id: go-version
+      - name: Parse go version from release-tools/prow.sh
         run: |
           GO_VERSION=$(cat release-tools/prow.sh  | grep "configvar CSI_PROW_GO_VERSION_BUILD" | awk '{print $3}' | sed 's/"//g')
-          echo "version=$GO_VERSION" >> $GITHUB_OUTPUT
+          echo "Using go from release-tools: $GO_VERSION"
+          echo "$GO_VERSION" >> '.goversion'
 
-      - name: Run Trivy scanner for Go version vulnerabilities
+      - name: Install go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: .goversion
+
+      - name: Build an image from Dockerfile
+        run: |
+          make
+          docker build -t test/livenessprobe:latest -f Dockerfile --output=type=docker --label revision=latest .
+
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'golang:${{ steps.go-version.outputs.version }}'
+          image-ref: 'test/livenessprobe:latest'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
-          vuln-type: 'library'
+          vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
