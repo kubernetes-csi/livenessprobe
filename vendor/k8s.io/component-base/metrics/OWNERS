@@ -1,9 +1,12 @@
 # See the OWNERS docs at https://go.k8s.io/owners
 
 approvers:
-- sig-instrumentation-approvers
-- logicalhan
+  - sig-instrumentation-approvers
+  - RainbowMango
+emeritus_approvers:
+  - logicalhan
 reviewers:
-- sig-instrumentation-reviewers
+  - sig-instrumentation-reviewers
+  - YoyinZyc
 labels:
-- sig/instrumentation
+  - sig/instrumentation

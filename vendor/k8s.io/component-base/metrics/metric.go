@@ -18,12 +18,14 @@ package metrics
 
 import (
 	"sync"
+	"sync/atomic"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 
-	"k8s.io/klog"
+	promext "k8s.io/component-base/metrics/prometheusextension"
+	"k8s.io/klog/v2"
 )
 
 /*
@@ -63,13 +65,15 @@ implements kubeCollector to get deferred registration behavior. You must call la
 with the kubeCollector itself as an argument.
 */
 type lazyMetric struct {
-	isDeprecated        bool
-	isHidden            bool
+	fqName              string
+	isDeprecated        atomic.Bool
+	isHidden            atomic.Bool
 	isCreated           bool
 	createLock          sync.RWMutex
 	markDeprecationOnce sync.Once
 	createOnce          sync.Once
 	self                kubeCollector
+	stabilityLevel      StabilityLevel
 }
 
 func (r *lazyMetric) IsCreated() bool {
@@ -81,40 +85,54 @@ func (r *lazyMetric) IsCreated() bool {
 // lazyInit provides the lazyMetric with a reference to the kubeCollector it is supposed
 // to allow lazy initialization for. It should be invoked in the factory function which creates new
 // kubeCollector type objects.
-func (r *lazyMetric) lazyInit(self kubeCollector) {
+func (r *lazyMetric) lazyInit(self kubeCollector, fqName string) {
+	r.fqName = fqName
 	r.self = self
 }
 
-// determineDeprecationStatus figures out whether the lazy metric should be deprecated or not.
+// preprocessMetric figures out whether the lazy metric should be hidden or not.
 // This method takes a Version argument which should be the version of the binary in which
-// this code is currently being executed.
-func (r *lazyMetric) determineDeprecationStatus(version semver.Version) {
-	selfVersion := r.self.DeprecatedVersion()
-	if selfVersion == nil {
+// this code is currently being executed. A metric can be hidden under two conditions:
+//  1. if the metric is deprecated and is outside the grace period (i.e. has been
+//     deprecated for more than one release
+//  2. if the metric is manually disabled via a CLI flag.
+//
+// Disclaimer:  disabling a metric via a CLI flag has higher precedence than
+// deprecation and will override show-hidden-metrics for the explicitly
+// disabled metric.
+func (r *lazyMetric) preprocessMetric(currentVersion semver.Version) {
+	disabledMetricsLock.RLock()
+	defer disabledMetricsLock.RUnlock()
+	// disabling metrics is higher in precedence than showing hidden metrics
+	if _, ok := disabledMetrics[r.fqName]; ok {
+		r.isHidden.Store(true)
+		return
+	}
+	deprecatedVersion := r.self.DeprecatedVersion()
+	if deprecatedVersion == nil {
 		return
 	}
 	r.markDeprecationOnce.Do(func() {
-		if selfVersion.LTE(version) {
-			r.isDeprecated = true
-		}
-		if ShouldShowHidden() {
-			klog.Warningf("Hidden metrics have been manually overridden, showing this very deprecated metric.")
-			return
-		}
-		if shouldHide(&version, selfVersion) {
+		r.isDeprecated.Store(isDeprecated(currentVersion, *deprecatedVersion))
+
+		if shouldHide(r.stabilityLevel, &currentVersion, deprecatedVersion) {
+			if ShouldShowHidden() {
+				klog.Warningf("Hidden metrics (%s) have been manually overridden, showing this very deprecated metric.", r.fqName)
+				return
+			}
 			// TODO(RainbowMango): Remove this log temporarily. https://github.com/kubernetes/kubernetes/issues/85369
 			// klog.Warningf("This metric has been deprecated for more than one release, hiding.")
-			r.isHidden = true
+			r.isHidden.Store(true)
 		}
 	})
 }
 
 func (r *lazyMetric) IsHidden() bool {
-	return r.isHidden
+	return r.isHidden.Load()
 }
 
 func (r *lazyMetric) IsDeprecated() bool {
-	return r.isDeprecated
+	return r.isDeprecated.Load()
 }
 
 // Create forces the initialization of metric which has been deferred until
@@ -124,12 +142,13 @@ func (r *lazyMetric) IsDeprecated() bool {
 // created.
 func (r *lazyMetric) Create(version *semver.Version) bool {
 	if version != nil {
-		r.determineDeprecationStatus(*version)
+		r.preprocessMetric(*version)
 	}
 	// let's not create if this metric is slated to be hidden
 	if r.IsHidden() {
 		return false
 	}
+
 	r.createOnce.Do(func() {
 		r.createLock.Lock()
 		defer r.createLock.Unlock()
@@ -140,6 +159,13 @@ func (r *lazyMetric) Create(version *semver.Version) bool {
 			r.self.initializeMetric()
 		}
 	})
+	sl := r.stabilityLevel
+	deprecatedV := r.self.DeprecatedVersion()
+	dv := ""
+	if deprecatedV != nil {
+		dv = deprecatedV.String()
+	}
+	registeredMetricsTotal.WithLabelValues(string(sl), dv).Inc()
 	return r.IsCreated()
 }
 
@@ -149,16 +175,21 @@ func (r *lazyMetric) ClearState() {
 	r.createLock.Lock()
 	defer r.createLock.Unlock()
 
-	r.isDeprecated = false
-	r.isHidden = false
+	r.isDeprecated.Store(false)
+	r.isHidden.Store(false)
 	r.isCreated = false
-	r.markDeprecationOnce = *(new(sync.Once))
-	r.createOnce = *(new(sync.Once))
+	r.markDeprecationOnce = sync.Once{}
+	r.createOnce = sync.Once{}
+}
+
+// FQName returns the fully-qualified metric name of the collector.
+func (r *lazyMetric) FQName() string {
+	return r.fqName
 }
 
 /*
 This code is directly lifted from the prometheus codebase. It's a convenience struct which
-allows you satisfy the Collector interface automatically if you already satisfy the Metric interface.
+allows you to satisfy the Collector interface automatically if you already satisfy the Metric interface.
 
 For reference: https://github.com/prometheus/client_golang/blob/v0.9.2/prometheus/collector.go#L98-L120
 */
@@ -181,42 +212,23 @@ func (c *selfCollector) Collect(ch chan<- prometheus.Metric) {
 // no-op vecs for convenience
 var noopCounterVec = &prometheus.CounterVec{}
 var noopHistogramVec = &prometheus.HistogramVec{}
-var noopSummaryVec = &prometheus.SummaryVec{}
+var noopTimingHistogramVec = &promext.TimingHistogramVec{}
 var noopGaugeVec = &prometheus.GaugeVec{}
-var noopObserverVec = &noopObserverVector{}
 
 // just use a convenience struct for all the no-ops
 var noop = &noopMetric{}
 
 type noopMetric struct{}
 
-func (noopMetric) Inc()                             {}
-func (noopMetric) Add(float64)                      {}
-func (noopMetric) Dec()                             {}
-func (noopMetric) Set(float64)                      {}
-func (noopMetric) Sub(float64)                      {}
-func (noopMetric) Observe(float64)                  {}
-func (noopMetric) SetToCurrentTime()                {}
-func (noopMetric) Desc() *prometheus.Desc           { return nil }
-func (noopMetric) Write(*dto.Metric) error          { return nil }
-func (noopMetric) Describe(chan<- *prometheus.Desc) {}
-func (noopMetric) Collect(chan<- prometheus.Metric) {}
-
-type noopObserverVector struct{}
-
-func (noopObserverVector) GetMetricWith(prometheus.Labels) (prometheus.Observer, error) {
-	return noop, nil
-}
-func (noopObserverVector) GetMetricWithLabelValues(...string) (prometheus.Observer, error) {
-	return noop, nil
-}
-func (noopObserverVector) With(prometheus.Labels) prometheus.Observer    { return noop }
-func (noopObserverVector) WithLabelValues(...string) prometheus.Observer { return noop }
-func (noopObserverVector) CurryWith(prometheus.Labels) (prometheus.ObserverVec, error) {
-	return noopObserverVec, nil
-}
-func (noopObserverVector) MustCurryWith(prometheus.Labels) prometheus.ObserverVec {
-	return noopObserverVec
-}
-func (noopObserverVector) Describe(chan<- *prometheus.Desc) {}
-func (noopObserverVector) Collect(chan<- prometheus.Metric) {}
+func (noopMetric) Inc()                              {}
+func (noopMetric) Add(float64)                       {}
+func (noopMetric) Dec()                              {}
+func (noopMetric) Set(float64)                       {}
+func (noopMetric) Sub(float64)                       {}
+func (noopMetric) Observe(float64)                   {}
+func (noopMetric) ObserveWithWeight(float64, uint64) {}
+func (noopMetric) SetToCurrentTime()                 {}
+func (noopMetric) Desc() *prometheus.Desc            { return nil }
+func (noopMetric) Write(*dto.Metric) error           { return nil }
+func (noopMetric) Describe(chan<- *prometheus.Desc)  {}
+func (noopMetric) Collect(chan<- prometheus.Metric)  {}

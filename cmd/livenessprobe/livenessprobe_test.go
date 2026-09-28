@@ -19,15 +19,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	csitestutil "github.com/kubernetes-csi/csi-test/v5/utils"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-csi/csi-test/v4/driver"
+	"github.com/kubernetes-csi/csi-lib-utils/metrics"
+	"github.com/kubernetes-csi/csi-test/v5/driver"
+	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -52,13 +53,10 @@ func createMockServer(t *testing.T) (
 		Node:       nodeServer,
 	})
 
-	tmpDir, err := ioutil.TempDir("", "livenessprobe_test.*")
-	if err != nil {
-		t.Errorf("failed to create a temporary socket file name: %v", err)
-	}
+	tmpDir := t.TempDir()
 
 	csiEndpoint := fmt.Sprintf("%s/csi.sock", tmpDir)
-	err = drv.StartOnAddress("unix", csiEndpoint)
+	err := drv.StartOnAddress("unix", csiEndpoint)
 	if err != nil {
 		t.Errorf("failed to start the csi driver at %s: %v", csiEndpoint, err)
 	}
@@ -81,9 +79,13 @@ func TestProbe(t *testing.T) {
 
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
-	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
+	idServer.EXPECT().Probe(gomock.Any(), csitestutil.Protobuf(inProbe)).Return(outProbe, injectedErr).Times(1)
 
-	hp := &healthProbe{driverName: driverName}
+	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
+	hp := &healthProbe{
+		driverName:     driverName,
+		metricsManager: metricsManager,
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.URL.String() == "/healthz" {
@@ -119,9 +121,13 @@ func TestProbe_issue68(t *testing.T) {
 
 	inProbe := &csi.ProbeRequest{}
 	outProbe := &csi.ProbeResponse{}
-	idServer.EXPECT().Probe(gomock.Any(), inProbe).Return(outProbe, injectedErr).Times(1)
+	idServer.EXPECT().Probe(gomock.Any(), csitestutil.Protobuf(inProbe)).Return(outProbe, injectedErr).Times(1)
 
-	hp := &healthProbe{driverName: driverName}
+	metricsManager := metrics.NewCSIMetricsManager("" /* driverName */)
+	hp := &healthProbe{
+		driverName:     driverName,
+		metricsManager: metricsManager,
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.URL.String() == "/healthz" {

@@ -1,4 +1,4 @@
-// Copyright 2019 The Prometheus Authors
+// Copyright The Prometheus Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,6 +25,15 @@ const (
 
 	// DefaultSysMountPoint is the common mount point of the sys filesystem.
 	DefaultSysMountPoint = "/sys"
+
+	// DefaultConfigfsMountPoint is the common mount point of the configfs.
+	DefaultConfigfsMountPoint = "/sys/kernel/config"
+
+	// DefaultSelinuxMountPoint is the common mount point of the selinuxfs.
+	DefaultSelinuxMountPoint = "/sys/fs/selinux"
+
+	// DefaultResctrlMountPoint is the common mount point of the resctrl filesystem.
+	DefaultResctrlMountPoint = "/sys/fs/resctrl"
 )
 
 // FS represents a pseudo-filesystem, normally /proc or /sys, which provides an
@@ -36,10 +45,10 @@ type FS string
 func NewFS(mountPoint string) (FS, error) {
 	info, err := os.Stat(mountPoint)
 	if err != nil {
-		return "", fmt.Errorf("could not read %s: %s", mountPoint, err)
+		return "", fmt.Errorf("could not read %q: %w", mountPoint, err)
 	}
 	if !info.IsDir() {
-		return "", fmt.Errorf("mount point %s is not a directory", mountPoint)
+		return "", fmt.Errorf("mount point %q is not a directory", mountPoint)
 	}
 
 	return FS(mountPoint), nil
